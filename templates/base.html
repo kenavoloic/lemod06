@@ -6,6 +6,8 @@
     <title>{% block title %}Suivi des Conducteurs{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    {% load static %}
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -46,14 +48,6 @@
                     </li>
                     {% endif %}
                     
-                    {% if user.has_perm:'suivi_conducteurs.view_conducteur' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'suivi_conducteurs:conducteur_list' %}">
-                            <i class="fas fa-users me-1"></i>Conducteurs
-                        </a>
-                    </li>
-                    {% endif %}
-                    
                     {% if user.has_perm:'auth.view_group' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'gestion_groupes:dashboard' %}">
@@ -64,16 +58,14 @@
                 </ul>
                 
                 <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-theme-toggle title="Basculer le thème">
+                            <i class="fas fa-moon"></i>
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-user-circle me-1"></i>{{ user.get_full_name|default:user.username }}
-                            {% if user.groups.all %}
-                                {% for groupe in user.groups.all %}
-                                    <span class="badge ms-1" style="background-color: {% if groupe.groupe_etendu %}{{ groupe.groupe_etendu.couleur }}{% else %}#6c757d{% endif %};">
-                                        {{ groupe.name }}
-                                    </span>
-                                {% endfor %}
-                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{% url 'user_profile' %}">
@@ -82,13 +74,13 @@
                             <li><a class="dropdown-item" href="{% url 'change_password' %}">
                                 <i class="fas fa-key me-1"></i>Changer mot de passe
                             </a></li>
-                            <li><hr class="dropdown-divider"></li>
                             {% if user.is_staff %}
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/admin/">
                                 <i class="fas fa-cog me-1"></i>Administration
                             </a></li>
-                            <li><hr class="dropdown-divider"></li>
                             {% endif %}
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'user_logout' %}">
                                 <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
                             </a></li>
@@ -105,6 +97,8 @@
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+	<script src="{% static 'js/utils.js' %}"></script>
+	{% block extra_js %}{% endblock %}
+	</body>
+	
+	</html>

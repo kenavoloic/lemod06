@@ -4,45 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Évaluation - {{ evaluation.conducteur.nom_complet }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .score-badge {
-            font-size: 1.2rem;
-            padding: 0.5rem 1rem;
-        }
-        .score-excellent { background-color: #28a745; }
-        .score-good { background-color: #17a2b8; }
-        .score-average { background-color: #ffc107; color: #212529; }
-        .score-poor { background-color: #dc3545; }
-        .criteria-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-        .criteria-card {
-            text-align: center;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-        .criteria-score {
-            font-size: 2rem;
-            font-weight: bold;
-            margin: 0.5rem 0;
-        }
-        .print-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-        }
-        @media print {
-            .no-print { display: none !important; }
-            .print-btn { display: none !important; }
-        }
-    </style>
-</head>
+	<title>Évaluation - {{ evaluation.conducteur.nom_complet }}</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	{% block extra_css %}
+	<link href="{% static 'css/evaluation.css' %}" rel="stylesheet">
+	{% endblock %}
+	</head>
 <body>
 		{% include 'includes/navbar.html' %}
   <div class="container mt-4 position-relative">
