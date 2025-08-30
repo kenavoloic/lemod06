@@ -1,4 +1,4 @@
-# suivi_conducteurs/views.py
+# suivi_conducteurs/views.py - Version corrigée complète
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.db.models import Avg, Sum, Count, Q
 from datetime import date
 import json
 
@@ -19,7 +20,6 @@ from .forms import EvaluationForm
 @login_required
 def dashboard(request):
     """Page d'accueil du module de suivi des conducteurs"""
-    from django.db.models import Count
     from datetime import date, timedelta
     
     # Statistiques rapides
@@ -64,26 +64,25 @@ def create_evaluation(request):
 @require_http_methods(["GET"])
 def load_criteres_htmx(request):
     """Charge les critères actifs pour un type d'évaluation donné via HTMX"""
-    # HTMX envoie la valeur du select avec le nom 'type_evaluation'
     type_evaluation_id = request.GET.get('type_evaluation')
     
-    print(f"DEBUG: Tous les paramètres GET = {dict(request.GET)}")  # Debug complet
-    print(f"DEBUG: type_evaluation reçu = {type_evaluation_id}")  # Debug
+    print(f"DEBUG: Tous les paramètres GET = {dict(request.GET)}")
+    print(f"DEBUG: type_evaluation reçu = {type_evaluation_id}")
     
     if not type_evaluation_id or type_evaluation_id == '':
-        print("DEBUG: Aucun type_evaluation fourni ou vide")  # Debug
+        print("DEBUG: Aucun type_evaluation fourni ou vide")
         return HttpResponse('')
     
     try:
         type_evaluation = TypologieEvaluation.objects.get(id=type_evaluation_id)
-        print(f"DEBUG: Type d'évaluation trouvé = {type_evaluation.nom}")  # Debug
+        print(f"DEBUG: Type d'évaluation trouvé = {type_evaluation.nom}")
         
         criteres = CritereEvaluation.objects.filter(
             type_evaluation=type_evaluation,
             actif=True
         ).order_by('nom')
         
-        print(f"DEBUG: Nombre de critères actifs trouvés = {criteres.count()}")  # Debug
+        print(f"DEBUG: Nombre de critères actifs trouvés = {criteres.count()}")
         for critere in criteres:
             print(f"DEBUG: Critère {critere.nom} - Min: {critere.valeur_mini}, Max: {critere.valeur_maxi}, Actif: {critere.actif}")
         
@@ -94,10 +93,10 @@ def load_criteres_htmx(request):
         return render(request, 'suivi_conducteurs/partials/criteres_form.html', context)
     
     except TypologieEvaluation.DoesNotExist:
-        print("DEBUG: TypologieEvaluation non trouvée")  # Debug
+        print("DEBUG: TypologieEvaluation non trouvée")
         return HttpResponse('')
     except Exception as e:
-        print(f"DEBUG: Erreur = {e}")  # Debug
+        print(f"DEBUG: Erreur = {e}")
         return HttpResponse('')
 
 
@@ -240,10 +239,15 @@ def evaluation_detail(request, pk):
     
     # Calcul de statistiques
     notes_values = [note.valeur for note in notes if note.valeur is not None]
+    
+    # Calcul du score en utilisant la méthode du modèle
+    score_percentage = evaluation.calculate_score()
+    
     stats = {
         'moyenne': sum(notes_values) / len(notes_values) if notes_values else 0,
         'total_criteres': len(notes),
         'notes_attribuees': len(notes_values),
+        'score_percentage': score_percentage,
     }
     
     context = {
@@ -257,24 +261,51 @@ def evaluation_detail(request, pk):
 @login_required
 @permission_required('suivi_conducteurs.view_evaluation', raise_exception=True)
 def evaluation_list(request):
-    """Liste des évaluations avec filtres"""
+    """Liste des évaluations avec filtres et scores"""
+    # Requête de base avec les relations nécessaires
     evaluations = Evaluation.objects.select_related(
-        'conducteur', 'evaluateur', 'type_evaluation'
+        'conducteur', 'evaluateur', 'type_evaluation', 'conducteur__salsocid', 'conducteur__site'
+    ).prefetch_related(
+        'notes__critere'
     ).order_by('-date_evaluation')
     
-    # Filtres
+    # Récupérer les filtres
     conducteur_filter = request.GET.get('conducteur')
     type_filter = request.GET.get('type_evaluation')
     
+    # Convertir en entier si présent
+    conducteur_filter_id = None
+    type_filter_id = None
+    
     if conducteur_filter:
-        evaluations = evaluations.filter(conducteur__id=conducteur_filter)
+        try:
+            conducteur_filter_id = int(conducteur_filter)
+            evaluations = evaluations.filter(conducteur__id=conducteur_filter_id)
+        except (ValueError, TypeError):
+            pass
     
     if type_filter:
-        evaluations = evaluations.filter(type_evaluation__id=type_filter)
+        try:
+            type_filter_id = int(type_filter)
+            evaluations = evaluations.filter(type_evaluation__id=type_filter_id)
+        except (ValueError, TypeError):
+            pass
+    
+    # Ajouter le score pour chaque évaluation
+    evaluations_with_scores = []
+    for evaluation in evaluations:
+        # Calculer le score de cette évaluation en utilisant la méthode du modèle
+        score = evaluation.calculate_score()
+        evaluations_with_scores.append({
+            'evaluation': evaluation,
+            'score': score
+        })
     
     context = {
-        'evaluations': evaluations,
+        'evaluations_with_scores': evaluations_with_scores,
         'conducteurs': Conducteur.objects.filter(salactif=True),
         'types_evaluation': TypologieEvaluation.objects.all(),
+        'selected_conducteur_id': conducteur_filter_id,
+        'selected_type_id': type_filter_id,
     }
     return render(request, 'suivi_conducteurs/evaluation_list.html', context)

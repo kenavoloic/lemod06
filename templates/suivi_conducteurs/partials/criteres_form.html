@@ -1,58 +1,404 @@
-<!-- templates/suivi_conducteurs/partials/criteres_form.html -->
-<div class="card mt-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">
-            <i class="fas fa-star text-warning"></i>
-            Critères d'évaluation - {{ type_evaluation.nom }}
-            <small class="text-muted">({{ criteres.count }} critères actifs)</small>
-        </h5>
-        <p class="card-text text-muted mb-0">{{ type_evaluation.description }}</p>
-    </div>
-    <div class="card-body">
-        <div class="criteria-grid">
-            {% for critere in criteres %}
-                <div class="criteria-card">
-                    <label for="note_{{ critere.id }}" class="form-label fw-bold">
-                        Critère {{ critere.nom }}
-                        <span class="text-danger">*</span>
-                    </label>
-                    <div class="input-group">
-                        <input type="number" 
-                               name="note_{{ critere.id }}" 
-                               id="note_{{ critere.id }}"
-                               class="form-control note-input"
-                               min="{{ critere.valeur_mini }}" 
-                               max="{{ critere.valeur_maxi }}"
-                               data-critere-id="{{ critere.id }}"
-                               placeholder="Note sur {{ critere.valeur_maxi }}"
-                               required>
-                        <span class="input-group-text">/ {{ critere.valeur_maxi }}</span>
-                    </div>
-                    <div id="validation-{{ critere.id }}" class="validation-container">
-                        <span class="validation-feedback text-muted">
-                            <i class="fas fa-info-circle"></i>
-                            Entre {{ critere.valeur_mini }} et {{ critere.valeur_maxi }}
-                        </span>
-                    </div>
-                </div>
-            {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Aucun critère actif trouvé pour ce type d'évaluation.
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-        
-        {% if criteres %}
-            <div class="mt-3 p-3 bg-light rounded">
-                <small class="text-muted">
-                    <i class="fas fa-lightbulb"></i>
-					<strong>Conseils :</strong> Utilisez l'échelle de {{ criteres.0.valeur_mini }} à {{ criteres.0.valeur_maxi }}.
-					Les champs deviennent verts quand ils sont correctement remplis.
-					</small>
+<!-- templates/suivi_conducteurs/partials/criteres_form.html - Version refactorisée -->
+{% load static %}
+
+{% if criteres %}
+<div class="card mt-4 animate-slide-in-up">
+	<div class="card-header bg-gradient-primary text-white">
+		<div class="d-flex justify-content-between align-items-center">
+			<div>
+				<h5 class="card-title mb-1">
+					<i class="fas fa-star me-2"></i>
+					Critères d'évaluation - {{ type_evaluation.nom }}
+				</h5>
+				<small class="opacity-75">
+					{{ criteres.count }} critère{{ criteres.count|pluralize }} actif{{ criteres.count|pluralize }} à
+					noter
+				</small>
+			</div>
+			<div class="text-end">
+				<span class="badge bg-light text-dark">
+					<i class="fas fa-info-circle me-1"></i>
+					Échelle: {{ criteres.0.valeur_mini }}-{{ criteres.0.valeur_maxi }}
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="card-body">
+		<!-- Description du type d'évaluation -->
+		{% if type_evaluation.description %}
+		<div class="alert alert-info mb-4">
+			<i class="fas fa-info-circle me-2"></i>
+			<strong>À propos de cette évaluation :</strong> {{ type_evaluation.description }}
+		</div>
+		{% endif %}
+
+		<!-- Grille des critères -->
+		<div class="criteria-grid">
+			{% for critere in criteres %}
+			<div class="criteria-card" data-critere-id="{{ critere.id }}">
+				<!-- En-tête du critère -->
+				<div class="d-flex justify-content-between align-items-start mb-3">
+					<div>
+						<h6 class="fw-bold mb-1">
+							<span class="badge bg-primary me-2">{{ critere.nom }}</span>
+							Critère {{ critere.nom }}
+						</h6>
+						<small class="text-muted">
+							Note de {{ critere.valeur_mini }} à {{ critere.valeur_maxi }}
+						</small>
 					</div>
-					{% endif %}
+					<div class="criteria-status" id="status-{{ critere.id }}">
+						<i class="fas fa-circle text-muted" title="En attente de notation"></i>
 					</div>
+				</div>
+
+				<!-- Champ de saisie de la note -->
+				<div class="mb-3">
+					<label for="note_{{ critere.id }}" class="form-label visually-hidden">
+						Note pour le critère {{ critere.nom }}
+					</label>
+					<div class="input-group input-group-lg">
+						<span class="input-group-text">
+							<i class="fas fa-star text-warning"></i>
+						</span>
+						<input type="number" name="note_{{ critere.id }}" id="note_{{ critere.id }}"
+							class="form-control note-input text-center" min="{{ critere.valeur_mini }}"
+							max="{{ critere.valeur_maxi }}" data-critere-id="{{ critere.id }}" placeholder="Note"
+							required autocomplete="off">
+						<span class="input-group-text fw-bold">
+							/ {{ critere.valeur_maxi }}
+						</span>
 					</div>
+				</div>
+
+				<!-- Zone de feedback de validation -->
+				<div id="validation-{{ critere.id }}" class="validation-container">
+					<div class="validation-feedback text-muted small">
+						<i class="fas fa-info-circle me-1"></i>
+						Saisissez une note entre {{ critere.valeur_mini }} et {{ critere.valeur_maxi }}
+					</div>
+				</div>
+
+				<!-- Indicateur de progression visuel -->
+				<div class="progress mt-2" style="height: 4px;">
+					<div class="progress-bar" id="progress-{{ critere.id }}" role="progressbar" style="width: 0%"
+						aria-valuenow="0" aria-valuemin="{{ critere.valeur_mini }}"
+						aria-valuemax="{{ critere.valeur_maxi }}">
+					</div>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+
+		<!-- Résumé de progression -->
+		<div class="row mt-4">
+			<div class="col-12">
+				<div class="card bg-light">
+					<div class="card-body">
+						<div class="row text-center">
+							<div class="col-md-3">
+								<div class="progress-stat">
+									<h4 class="text-primary mb-0" id="completed-count">0</h4>
+									<small class="text-muted">Critères notés</small>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="progress-stat">
+									<h4 class="text-info mb-0">{{ criteres.count }}</h4>
+									<small class="text-muted">Total critères</small>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="progress-stat">
+									<h4 class="text-success mb-0" id="average-score">-</h4>
+									<small class="text-muted">Moyenne actuelle</small>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="progress-stat">
+									<h4 class="mb-0" id="completion-percentage">0%</h4>
+									<small class="text-muted">Progression</small>
+								</div>
+							</div>
+						</div>
+
+						<!-- Barre de progression globale -->
+						<div class="progress mt-3" style="height: 8px;">
+							<div class="progress-bar bg-success" id="global-progress" role="progressbar"
+								style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Conseils et aide -->
+		<div class="row mt-3">
+			<div class="col-12">
+				<div class="alert alert-light border-primary">
+					<div class="row align-items-center">
+						<div class="col-md-8">
+							<div class="d-flex align-items-center">
+								<i class="fas fa-lightbulb text-warning fa-2x me-3"></i>
+								<div>
+									<strong>Conseils pour bien évaluer :</strong>
+									<ul class="mb-0 mt-1 small">
+										<li>Utilisez toute l'échelle de notation ({{ criteres.0.valeur_mini }} à {{
+											criteres.0.valeur_maxi }})</li>
+										<li>Les champs deviennent verts quand ils sont correctement remplis</li>
+										<li>Votre progression est sauvegardée automatiquement</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="col-md-4 text-md-end">
+							<div class="btn-group btn-group-sm">
+								<button type="button" class="btn btn-outline-primary" data-action="save-draft"
+									title="Sauvegarder le brouillon">
+									<i class="fas fa-save me-1"></i>
+									Sauvegarder
+								</button>
+								<button type="button" class="btn btn-outline-secondary" data-action="reset-form"
+									title="Réinitialiser le formulaire">
+									<i class="fas fa-undo me-1"></i>
+									Reset
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Script pour la gestion temps réel des critères -->
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		// Initialiser la validation des critères chargés
+		initializeCriteriaValidation();
+	});
+
+	function initializeCriteriaValidation() {
+		const noteInputs = document.querySelectorAll('.note-input');
+		const totalCriteres = noteInputs.length;
+		let completedCount = 0;
+		let totalScore = 0;
+
+		noteInputs.forEach(input => {
+			input.addEventListener('input', function () {
+				validateCriteriaInput(this, totalCriteres);
+			});
+
+			// Validation initiale si valeur présente
+			if (input.value) {
+				validateCriteriaInput(input, totalCriteres);
+			}
+		});
+
+		updateGlobalProgress();
+	}
+
+	function validateCriteriaInput(input, totalCriteres) {
+		const critereId = input.dataset.critereId;
+		const min = parseInt(input.min);
+		const max = parseInt(input.max);
+		const value = parseInt(input.value);
+
+		const card = input.closest('.criteria-card');
+		const statusIcon = document.getElementById(`status-${critereId}`);
+		const validationDiv = document.getElementById(`validation-${critereId}`);
+		const progressBar = document.getElementById(`progress-${critereId}`);
+
+		// Reset des états
+		card.classList.remove('has-valid-input', 'has-invalid-input');
+		input.classList.remove('is-valid', 'is-invalid');
+
+		if (!input.value) {
+			// Champ vide
+			statusIcon.innerHTML = '<i class="fas fa-circle text-muted" title="En attente"></i>';
+			validationDiv.innerHTML = `
+            <div class="validation-feedback text-muted small">
+                <i class="fas fa-info-circle me-1"></i>
+                Saisissez une note entre ${min} et ${max}
+            </div>
+        `;
+			progressBar.style.width = '0%';
+			progressBar.className = 'progress-bar';
+			return false;
+		}
+
+		if (isNaN(value) || value < min || value > max) {
+			// Valeur invalide
+			card.classList.add('has-invalid-input');
+			input.classList.add('is-invalid');
+			statusIcon.innerHTML = '<i class="fas fa-times-circle text-danger" title="Invalide"></i>';
+			validationDiv.innerHTML = `
+            <div class="validation-feedback invalid">
+                <i class="fas fa-times-circle me-1"></i>
+                La note doit être entre ${min} et ${max}
+            </div>
+        `;
+			progressBar.style.width = '0%';
+			progressBar.className = 'progress-bar bg-danger';
+			return false;
+		} else {
+			// Valeur valide
+			card.classList.add('has-valid-input');
+			input.classList.add('is-valid');
+			statusIcon.innerHTML = '<i class="fas fa-check-circle text-success" title="Valide"></i>';
+			validationDiv.innerHTML = `
+            <div class="validation-feedback valid">
+                <i class="fas fa-check-circle me-1"></i>
+                Parfait ! Note valide
+            </div>
+        `;
+
+			// Mettre à jour la barre de progression du critère
+			const percentage = ((value - min) / (max - min)) * 100;
+			progressBar.style.width = `${percentage}%`;
+			progressBar.className = `progress-bar ${percentage >= 80 ? 'bg-success' :
+					percentage >= 60 ? 'bg-info' :
+						percentage >= 40 ? 'bg-warning' : 'bg-danger'
+				}`;
+
+			return true;
+		}
+	}
+
+	function updateGlobalProgress() {
+		const noteInputs = document.querySelectorAll('.note-input');
+		const totalCriteres = noteInputs.length;
+		let completedCount = 0;
+		let totalScore = 0;
+		let validScores = [];
+
+		noteInputs.forEach(input => {
+			const value = parseInt(input.value);
+			const min = parseInt(input.min);
+			const max = parseInt(input.max);
+
+			if (!isNaN(value) && value >= min && value <= max) {
+				completedCount++;
+				totalScore += value;
+				validScores.push(value);
+			}
+		});
+
+		// Mettre à jour les compteurs
+		document.getElementById('completed-count').textContent = completedCount;
+
+		// Mettre à jour la moyenne
+		const averageElement = document.getElementById('average-score');
+		if (validScores.length > 0) {
+			const average = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+			averageElement.textContent = average.toFixed(1);
+			averageElement.className = `mb-0 ${average >= 8 ? 'text-success' :
+					average >= 6 ? 'text-info' :
+						average >= 4 ? 'text-warning' : 'text-danger'
+				}`;
+		} else {
+			averageElement.textContent = '-';
+			averageElement.className = 'text-muted mb-0';
+		}
+
+		// Mettre à jour le pourcentage de completion
+		const completionPercentage = totalCriteres > 0 ? (completedCount / totalCriteres) * 100 : 0;
+		document.getElementById('completion-percentage').textContent = `${Math.round(completionPercentage)}%`;
+
+		// Mettre à jour la barre de progression globale
+		const globalProgress = document.getElementById('global-progress');
+		globalProgress.style.width = `${completionPercentage}%`;
+		globalProgress.className = `progress-bar ${completionPercentage === 100 ? 'bg-success' :
+				completionPercentage >= 75 ? 'bg-info' :
+					completionPercentage >= 50 ? 'bg-warning' : 'bg-secondary'
+			}`;
+
+		// Effet visuel quand tout est complété
+		if (completionPercentage === 100) {
+			globalProgress.classList.add('progress-bar-striped', 'progress-bar-animated');
+
+			// Notification de completion
+			if (window.app && typeof window.app.showNotification === 'function') {
+				window.app.showNotification(
+					'Tous les critères sont notés ! Vous pouvez maintenant créer l\'évaluation.',
+					'success',
+					3000
+				);
+			}
+
+			// Animation de celebration
+			setTimeout(() => {
+				document.querySelectorAll('.criteria-card.has-valid-input').forEach((card, index) => {
+					setTimeout(() => {
+						card.style.animation = 'pulse 0.6s ease-in-out';
+					}, index * 100);
+				});
+			}, 500);
+		}
+
+		// Déclencher l'événement de mise à jour pour le bouton de soumission
+		document.dispatchEvent(new CustomEvent('criteriaValidationUpdate', {
+			detail: {
+				completed: completedCount,
+				total: totalCriteres,
+				percentage: completionPercentage,
+				isComplete: completionPercentage === 100
+			}
+		}));
+	}
+
+	// Écouter les changements dans les inputs pour mettre à jour la progression
+	document.addEventListener('input', function (e) {
+		if (e.target.classList.contains('note-input')) {
+			setTimeout(updateGlobalProgress, 100); // Délai pour laisser la validation se faire
+		}
+	});
+
+	// Animer l'apparition des cartes de critères
+	document.addEventListener('DOMContentLoaded', function () {
+		const criteriaCards = document.querySelectorAll('.criteria-card');
+		criteriaCards.forEach((card, index) => {
+			card.style.opacity = '0';
+			card.style.transform = 'translateY(20px)';
+
+			setTimeout(() => {
+				card.style.transition = 'all 0.4s ease';
+				card.style.opacity = '1';
+				card.style.transform = 'translateY(0)';
+			}, index * 100);
+		});
+	});
+</script>
+
+{% else %}
+<!-- État vide quand aucun critère n'est trouvé -->
+<div class="card mt-4 animate-slide-in-up">
+	<div class="card-body text-center py-5">
+		<div class="mb-4">
+			<i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+		</div>
+		<h5 class="text-muted mb-3">Aucun critère actif</h5>
+		<p class="text-muted mb-4">
+			Aucun critère d'évaluation actif n'a été trouvé pour ce type d'évaluation.
+			<br>
+			Veuillez contacter l'administrateur pour configurer les critères.
+		</p>
+		<div class="d-flex justify-content-center gap-2">
+			<button type="button" class="btn btn-outline-secondary"
+				onclick="document.getElementById('type_evaluation').value = ''; document.getElementById('criteres-container').innerHTML = '';">
+				<i class="fas fa-arrow-left me-1"></i>
+				Choisir un autre type
+			</button>
+			{% if user.is_staff %}
+			<a href="/admin/suivi_conducteurs/critereevaluation/" target="_blank" class="btn btn-outline-primary">
+				<i class="fas fa-cog me-1"></i>
+				Configurer les critères
+			</a>
+			{% endif %}
+		</div>
+	</div>
+</div>
+{% endif %}

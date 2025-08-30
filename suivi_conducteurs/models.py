@@ -109,6 +109,13 @@ class Conducteur(models.Model):
     def nom_complet(self):
         return f"{self.salnom} {self.salnom2}"
 
+    def get_last_evaluation_score(self):
+        """Retourne le score de la dernière évaluation de ce conducteur"""
+        derniere_evaluation = self.evaluation_set.order_by('-date_evaluation').first()
+        if derniere_evaluation:
+            return derniere_evaluation.calculate_score()
+        return None
+
     class Meta:
         verbose_name = "Conducteur"
         verbose_name_plural = "Conducteurs"
@@ -202,6 +209,51 @@ class Evaluation(models.Model):
                     'type_evaluation': "Impossible de changer le type d'évaluation : des notes existent déjà pour d'autres types."
                 })
 
+    def calculate_score(self):
+        """
+        Calcule le score de l'évaluation en pourcentage
+        Score = 100 * (somme des notes / somme des valeurs maximales)
+        """
+        # Récupérer toutes les notes de l'évaluation avec valeur non nulle
+        notes = self.notes.filter(
+            valeur__isnull=False,
+            critere__actif=True
+        ).select_related('critere')
+    
+        if not notes.exists():
+            return None
+    
+        total_notes = 0
+        total_max = 0
+    
+        for note in notes:
+            total_notes += note.valeur
+            total_max += note.critere.valeur_maxi
+    
+        if total_max == 0:
+            return None
+    
+        score = (total_notes / total_max) * 100
+        return round(score, 1)
+
+    def get_completion_status(self):
+        """Retourne le statut de completion de l'évaluation"""
+        criteres_actifs = CritereEvaluation.objects.filter(
+            type_evaluation=self.type_evaluation,
+            actif=True
+        ).count()
+        
+        notes_completes = self.notes.filter(valeur__isnull=False).count()
+        
+        if criteres_actifs == 0:
+            return "Aucun critère actif"
+        
+        if notes_completes == criteres_actifs:
+            return f"✅ Complet ({notes_completes}/{criteres_actifs})"
+        else:
+            return f"⚠️ Incomplet ({notes_completes}/{criteres_actifs})"
+
+            
     class Meta:
         verbose_name = "Évaluation"
         verbose_name_plural = "Évaluations"

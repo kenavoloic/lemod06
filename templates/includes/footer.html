@@ -1,0 +1,95 @@
+<!-- includes/footer.html - Composant footer -->
+<footer class="footer mt-auto py-3 bg-light border-top">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center text-muted">
+                    <i class="fas fa-truck me-2"></i>
+                    <span>Système de Suivi des Conducteurs &copy; {% now "Y" %}</span>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="d-flex justify-content-md-end justify-content-start align-items-center">
+                    <div class="user-status me-3">
+                        <small class="text-muted">
+                            Connecté en tant que 
+                            <a href="{% url 'user_profile' %}" class="text-decoration-none fw-bold">
+                                {{ user.get_full_name|default:user.username }}
+                            </a>
+                            {% if user.groups.all %}
+                                <span class="text-muted ms-1">
+                                    ({{ user.groups.all|join:", " }})
+                                </span>
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    <div class="footer-actions">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Actions rapides">
+                            <a href="{% url 'user_profile' %}" 
+                               class="btn btn-outline-secondary btn-sm" 
+                               title="Mon profil">
+                                <i class="fas fa-user"></i>
+                                <span class="d-none d-sm-inline ms-1">Profil</span>
+                            </a>
+                            
+                            {% if perms.suivi_conducteurs.add_evaluation %}
+                            <a href="{% url 'suivi_conducteurs:create_evaluation' %}" 
+                               class="btn btn-outline-primary btn-sm" 
+                               title="Nouvelle évaluation">
+                                <i class="fas fa-plus"></i>
+                                <span class="d-none d-sm-inline ms-1">Évaluer</span>
+                            </a>
+                            {% endif %}
+                            
+                            {% if user.is_staff %}
+                            <a href="/admin/" 
+                               class="btn btn-outline-secondary btn-sm" 
+                               title="Administration" 
+                               target="_blank">
+                                <i class="fas fa-cog"></i>
+                                <span class="d-none d-sm-inline ms-1">Admin</span>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Informations supplémentaires (masquables) -->
+        <div class="row mt-2 d-none" id="footer-details">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center text-muted small">
+                    <div>
+                        <span>Version 1.0.0</span>
+                        <span class="mx-2">•</span>
+                        <span>Django {{ django_version }}</span>
+                        <span class="mx-2">•</span>
+                        <span id="current-time"></span>
+                    </div>
+                    
+                    <div>
+                        <span>Dernière connexion : {{ user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bouton pour afficher/masquer les détails -->
+        <div class="row mt-1">
+            <div class="col-12 text-center">
+                <button type="button" 
+                        class="btn btn-link btn-sm text-muted p-0 border-0" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#footer-details"
+                        aria-expanded="false" 
+                        aria-controls="footer-details"
+                        title="Afficher/masquer les détails">
+					<i class="fas fa-chevron-up" id="footer-toggle-icon"></i>
+					</button>
+					</div>
+					</div>
+					</div>
+					</footer>

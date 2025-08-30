@@ -1,184 +1,276 @@
 <!-- templates/suivi_conducteurs/evaluation_detail.html -->
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Évaluation - {{ evaluation.conducteur.nom_complet }}</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-	{% block extra_css %}
-	<link href="{% static 'css/evaluation.css' %}" rel="stylesheet">
-	{% endblock %}
-	</head>
-<body>
-		{% include 'includes/navbar.html' %}
-  <div class="container mt-4 position-relative">
-        <!-- Bouton d'impression -->
-        <button onclick="window.print()" class="btn btn-outline-secondary print-btn no-print">
-            <i class="fas fa-print"></i> Imprimer
-        </button>
+{% extends 'base.html' %}
+{% load static %}
 
-        <!-- En-tête -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="display-6 mb-3">
-                    <i class="fas fa-clipboard-check text-primary"></i>
-                    Évaluation {{ evaluation.type_evaluation.nom }}
-                </h1>
-            </div>
-        </div>
+{% block title %}Évaluation - {{ evaluation.conducteur.nom_complet }} - {{ block.super }}{% endblock %}
 
-        <!-- Informations principales -->
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-info-circle"></i>
-                            Informations de l'évaluation
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Conducteur :</strong><br>
-                                   <i class="fas fa-user"></i> {{ evaluation.conducteur.nom_complet }}</p>
-                                <p><strong>Société :</strong><br>
-                                   <i class="fas fa-building"></i> {{ evaluation.conducteur.salsocid.socnom }}</p>
-                                <p><strong>Site :</strong><br>
-                                   <i class="fas fa-map-marker-alt"></i> {{ evaluation.conducteur.site.nom_commune }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Évaluateur :</strong><br>
-                                   <i class="fas fa-user-tie"></i> {{ evaluation.evaluateur.nom_complet }}</p>
-                                <p><strong>Service :</strong><br>
-                                   <i class="fas fa-users"></i> {{ evaluation.evaluateur.service.nom }}</p>
-                                <p><strong>Date :</strong><br>
-                                   <i class="fas fa-calendar"></i> {{ evaluation.date_evaluation|date:"d/m/Y" }}</p>
-                            </div>
-                        </div>
-                        <hr>
-                        <p class="mb-0"><strong>Description :</strong><br>
-                           {{ evaluation.type_evaluation.description }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Statistiques -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-chart-line"></i>
-                            Résultats
-                        </h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <span class="badge score-badge {% if stats.moyenne >= 8 %}score-excellent{% elif stats.moyenne >= 6 %}score-good{% elif stats.moyenne >= 4 %}score-average{% else %}score-poor{% endif %}">
-                                {{ stats.moyenne|floatformat:1 }}/10
-                            </span>
-                        </div>
-                        <p class="mb-2"><strong>Moyenne générale</strong></p>
-                        <hr>
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h5 class="text-primary">{{ stats.notes_attribuees }}</h5>
-                                <small class="text-muted">Notes données</small>
-                            </div>
-                            <div class="col-6">
-                                <h5 class="text-info">{{ stats.total_criteres }}</h5>
-                                <small class="text-muted">Critères total</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+{% block extra_css %}
+<link href="{% static 'css/evaluation.css' %}" rel="stylesheet">
+<style>
+	.score-badge {
+		display: inline-block;
+		padding: 0.75rem 1.5rem;
+		font-size: 1.5rem;
+		font-weight: 700;
+		border-radius: 50px;
+		background: linear-gradient(135deg, var(--color-success) 0%, #20c997 100%);
+		color: white;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+		box-shadow: var(--shadow-md);
+	}
 
-        <!-- Détail des notes -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-star"></i>
-                            Détail des notes par critère
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="criteria-grid">
-                            {% for note in notes %}
-                                <div class="criteria-card">
-                                    <h3 class="criteria-score 
-                                        {% if note.valeur >= 8 %}text-success
-                                        {% elif note.valeur >= 6 %}text-info
-                                        {% elif note.valeur >= 4 %}text-warning
-                                        {% else %}text-danger{% endif %}">
-                                        Critère {{ note.critere.nom }}
-                                    </h3>
-                                    <div class="criteria-score 
-                                        {% if note.valeur >= 8 %}text-success
-                                        {% elif note.valeur >= 6 %}text-info
-                                        {% elif note.valeur >= 4 %}text-warning
-                                        {% else %}text-danger{% endif %}">
-                                        {% if note.valeur %}
-                                            {{ note.valeur }}/{{ note.critere.valeur_maxi }}
-                                        {% else %}
-                                            Non noté
-                                        {% endif %}
-                                    </div>
-                                    <small class="text-muted">
-                                        Échelle: {{ note.critere.valeur_mini }}-{{ note.critere.valeur_maxi }}
-                                    </small>
-                                </div>
-                            {% empty %}
-                                <div class="col-12">
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        Aucune note enregistrée pour cette évaluation.
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+	.score-excellent {
+		background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+	}
 
-        <!-- Actions -->
-        <div class="row mt-4 no-print">
-            <div class="col-12">
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Retour à la liste
-                    </a>
-                    <div>
-                        <a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success">
-                            <i class="fas fa-plus"></i> Nouvelle évaluation
-                        </a>
-                        <button onclick="window.print()" class="btn btn-outline-primary">
-                            <i class="fas fa-print"></i> Imprimer
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+	.score-good {
+		background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+	}
 
-        <!-- Footer pour l'impression -->
-        <div class="row mt-5 d-none d-print-block">
-            <div class="col-12 text-center">
-                <hr>
-                <small class="text-muted">
-                    Évaluation générée le {{ "now"|date:"d/m/Y à H:i" }} - 
-                    Système de suivi des conducteurs
-                </small>
-            </div>
-        </div>
-    </div>
+	.score-average {
+		background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+		color: #212529;
+	}
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	</body>
-	
-	</html>
+	.score-poor {
+		background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+	}
+
+	.criteria-score {
+		font-size: 1.5rem;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 0.5rem;
+	}
+
+	.print-btn {
+		position: fixed;
+		top: 100px;
+		right: 20px;
+		z-index: 1000;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+
+	@media print {
+
+		.print-btn,
+		.no-print {
+			display: none !important;
+		}
+	}
+</style>
+{% endblock %}
+
+{% block main_class %}container mt-4 position-relative{% endblock %}
+
+{% block content %}
+<!-- Bouton d'impression -->
+<button onclick="window.print()" class="btn btn-outline-secondary print-btn no-print">
+	<i class="fas fa-print"></i> Imprimer
+</button>
+
+<!-- En-tête -->
+<div class="row mb-4">
+	<div class="col-12">
+		<h1 class="display-6 mb-3">
+			<i class="fas fa-clipboard-check text-primary"></i>
+			Évaluation {{ evaluation.type_evaluation.nom }}
+		</h1>
+	</div>
+</div>
+
+<!-- Informations principales -->
+<div class="row mb-4">
+	<div class="col-md-8">
+		<div class="card">
+			<div class="card-header bg-primary text-white">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-info-circle"></i>
+					Informations de l'évaluation
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-6">
+						<p><strong>Conducteur :</strong><br>
+							<i class="fas fa-user"></i> {{ evaluation.conducteur.nom_complet }}
+						</p>
+						<p><strong>Société :</strong><br>
+							<i class="fas fa-building"></i> {{ evaluation.conducteur.salsocid.socnom }}
+						</p>
+						<p><strong>Site :</strong><br>
+							<i class="fas fa-map-marker-alt"></i> {{ evaluation.conducteur.site.nom_commune }}
+						</p>
+					</div>
+					<div class="col-md-6">
+						<p><strong>Évaluateur :</strong><br>
+							<i class="fas fa-user-tie"></i> {{ evaluation.evaluateur.nom_complet }}
+						</p>
+						<p><strong>Service :</strong><br>
+							<i class="fas fa-users"></i> {{ evaluation.evaluateur.service.nom }}
+						</p>
+						<p><strong>Date :</strong><br>
+							<i class="fas fa-calendar"></i> {{ evaluation.date_evaluation|date:"d/m/Y" }}
+						</p>
+					</div>
+				</div>
+				<hr>
+				<p class="mb-0"><strong>Description :</strong><br>
+					{{ evaluation.type_evaluation.description }}</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Statistiques avec score -->
+	<div class="col-md-4">
+		<div class="card">
+			<div class="card-header bg-success text-white">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-chart-line"></i>
+					Résultats
+				</h5>
+			</div>
+			<div class="card-body text-center">
+				<div class="mb-3">
+					{% if stats.score_percentage is not None %}
+					<span class="score-badge 
+                            {% if stats.score_percentage >= 80 %}score-excellent
+                            {% elif stats.score_percentage >= 65 %}score-good
+                            {% elif stats.score_percentage >= 50 %}score-average
+                            {% else %}score-poor{% endif %}">
+						{{ stats.score_percentage }}%
+					</span>
+					<p class="mb-2 mt-2"><strong>Score global</strong></p>
+					<p class="small text-muted mb-3">
+						Moyenne arithmétique : {{ stats.moyenne|floatformat:1 }}/10
+					</p>
+					{% else %}
+					<span class="score-badge bg-secondary">
+						<i class="fas fa-minus"></i>
+					</span>
+					<p class="mb-2 mt-2"><strong>Pas de score</strong></p>
+					<p class="small text-muted mb-3">Aucune note attribuée</p>
+					{% endif %}
+				</div>
+				<hr>
+				<div class="row text-center">
+					<div class="col-6">
+						<h5 class="text-primary">{{ stats.notes_attribuees }}</h5>
+						<small class="text-muted">Notes données</small>
+					</div>
+					<div class="col-6">
+						<h5 class="text-info">{{ stats.total_criteres }}</h5>
+						<small class="text-muted">Critères total</small>
+					</div>
+				</div>
+
+				{% if stats.score_percentage is not None %}
+				<hr>
+				<div class="small text-muted">
+					<i class="fas fa-info-circle me-1"></i>
+					Score = (Notes obtenues / Notes max) × 100
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Détail des notes -->
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header bg-info text-white">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-star"></i>
+					Détail des notes par critère
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="criteria-grid">
+					{% for note in notes %}
+					<div class="criteria-card">
+						<h3 class="criteria-score 
+                                {% if note.valeur >= 8 %}text-success
+                                {% elif note.valeur >= 6 %}text-info
+                                {% elif note.valeur >= 4 %}text-warning
+                                {% else %}text-danger{% endif %}">
+							Critère {{ note.critere.nom }}
+						</h3>
+						<div class="criteria-score 
+                                {% if note.valeur >= 8 %}text-success
+                                {% elif note.valeur >= 6 %}text-info
+                                {% elif note.valeur >= 4 %}text-warning
+                                {% else %}text-danger{% endif %}">
+							{% if note.valeur %}
+							{{ note.valeur }}/{{ note.critere.valeur_maxi }}
+
+							<!-- Barre de progression visuelle -->
+							<div class="progress mt-2" style="height: 8px;">
+								<div class="progress-bar 
+                                            {% if note.valeur >= 8 %}bg-success
+                                            {% elif note.valeur >= 6 %}bg-info
+                                            {% elif note.valeur >= 4 %}bg-warning
+                                            {% else %}bg-danger{% endif %}"
+									style="width: {% widthratio note.valeur note.critere.valeur_maxi 100 %}%"></div>
+							</div>
+
+							<!-- Pourcentage pour ce critère -->
+							<small class="text-muted d-block mt-1">
+								{% widthratio note.valeur note.critere.valeur_maxi 100 %}%
+							</small>
+							{% else %}
+							<span class="text-muted">Non noté</span>
+							{% endif %}
+						</div>
+						<small class="text-muted">
+							Échelle: {{ note.critere.valeur_mini }}-{{ note.critere.valeur_maxi }}
+						</small>
+					</div>
+					{% empty %}
+					<div class="col-12">
+						<div class="alert alert-warning">
+							<i class="fas fa-exclamation-triangle"></i>
+							Aucune note enregistrée pour cette évaluation.
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4 no-print">
+	<div class="col-12">
+		<div class="d-flex justify-content-between">
+			<a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-secondary">
+				<i class="fas fa-arrow-left"></i> Retour à la liste
+			</a>
+			<div>
+				<a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success">
+					<i class="fas fa-plus"></i> Nouvelle évaluation
+				</a>
+				<button onclick="window.print()" class="btn btn-outline-primary">
+					<i class="fas fa-print"></i> Imprimer
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Footer pour l'impression -->
+<div class="row mt-5 d-none d-print-block">
+	<div class="col-12 text-center">
+		<hr>
+		<small class="text-muted">
+			Évaluation générée le {{ "now"|date:"d/m/Y à H:i" }} -
+			Système de suivi des conducteurs
+			{% if stats.score_percentage is not None %}
+			| Score global : {{ stats.score_percentage }}%
+			{% endif %}
+		</small>
+	</div>
+</div>
+{% endblock %}

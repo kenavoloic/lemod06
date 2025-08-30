@@ -1,134 +1,130 @@
-<!-- templates/registration/login.html -->
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>{{ title|default:"Connexion" }}</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-	{% load static %}
-	<link href="{% static 'css/auth.css' %}" rel="stylesheet">
-	</head>
-	<body class="login-body">
-		<div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card login-card">
-                    <div class="login-header">
-                        <i class="fas fa-truck fa-3x mb-3"></i>
-						<!-- <h2 class="mb-0">Évaluation des Conducteurs</h2> -->
-                        <p class="mb-0 opacity-75">Connectez-vous à votre compte</p>
-                    </div>
-                    
-                    <div class="login-body">
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'danger' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} me-2"></i>
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                        
-                        <form method="post">
-                            {% csrf_token %}
-                            
-                            <div class="mb-4">
-                                <label for="{{ form.username.id_for_label }}" class="form-label">
-                                    <i class="fas fa-user me-2"></i>Utilisateur
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-user"></i>
-                                    </span>
-                                    <input type="text" 
-                                           class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
-                                           name="{{ form.username.name }}" 
-                                           id="{{ form.username.id_for_label }}"
-                                           placeholder="Utilisateur"
-                                           value="{{ form.username.value|default:'' }}"
-                                           required>
-                                </div>
-                                {% if form.username.errors %}
-                                    <div class="text-danger small mt-1">
-                                        {% for error in form.username.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label for="{{ form.password.id_for_label }}" class="form-label">
-                                    <i class="fas fa-lock me-2"></i>Mot de passe
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-                                    <input type="password" 
-                                           class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
-                                           name="{{ form.password.name }}" 
-                                           id="{{ form.password.id_for_label }}"
-                                           placeholder="Entrez votre mot de passe"
-                                           required>
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                                {% if form.password.errors %}
-                                    <div class="text-danger small mt-1">
-                                        {% for error in form.password.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary btn-login">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Se connecter
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <hr class="my-4">
-                        
-                        
-                        <div class="text-center mt-4">
-                            <a href="/admin/" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-cog me-1"></i>Administration
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mt-3">
-                    <p class="text-white-50 small">
-                        © 2025 Système de Suivi des Conducteurs
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-		// Toggle password visibility
-		document.getElementById('togglePassword').addEventListener('click', function () {
-			const passwordField = document.getElementById('{{ form.password.id_for_label }}');
-			const toggleIcon = this.querySelector('i');
+<!-- ============================================
+     EXEMPLE 3: Page de connexion refactorisée
+     templates/registration/login.html
+     ============================================ -->
+{% extends 'base.html' %}
+{% load static %}
 
-			if (passwordField.type === 'password') {
-				passwordField.type = 'text';
-				toggleIcon.className = 'fas fa-eye-slash';
-			} else {
-				passwordField.type = 'password';
-				toggleIcon.className = 'fas fa-eye';
-			}
-		});
+{% block title %}Connexion - Suivi des Conducteurs{% endblock %}
 
-		// Auto-focus on username field
-		document.getElementById('{{ form.username.id_for_label }}').focus();
-	</script>
-	</body>
-	
-	</html>
+{% block body_class %}login-page{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/auth.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="login-body">
+	<div class="container">
+		<div class="row justify-content-center">
+			<div class="col-md-6 col-lg-5">
+				<div class="card login-card animate-bounce-in">
+					<div class="login-header text-center">
+						<i class="fas fa-truck fa-3x mb-3"></i>
+						<h2 class="mb-2">Suivi des Conducteurs</h2>
+						<p class="mb-0 opacity-75">Connectez-vous à votre compte</p>
+					</div>
+
+					<div class="login-form-body">
+						<form id="login-form" method="post" data-validate="true">
+							{% csrf_token %}
+
+							<div class="mb-4">
+								<label for="{{ form.username.id_for_label }}" class="form-label">
+									<i class="fas fa-user me-2"></i>Nom d'utilisateur
+								</label>
+								<div class="input-group">
+									<span class="input-group-text">
+										<i class="fas fa-user"></i>
+									</span>
+									<input type="text" class="form-control" name="{{ form.username.name }}"
+										id="{{ form.username.id_for_label }}" placeholder="Votre nom d'utilisateur"
+										value="{{ form.username.value|default:'' }}" required autocomplete="username">
+								</div>
+								{% if form.username.errors %}
+								<div class="invalid-feedback d-block">
+									{% for error in form.username.errors %}{{ error }}{% endfor %}
+								</div>
+								{% endif %}
+							</div>
+
+							<div class="mb-4">
+								<label for="{{ form.password.id_for_label }}" class="form-label">
+									<i class="fas fa-lock me-2"></i>Mot de passe
+								</label>
+								<div class="input-group">
+									<span class="input-group-text">
+										<i class="fas fa-lock"></i>
+									</span>
+									<input type="password" class="form-control" name="{{ form.password.name }}"
+										id="{{ form.password.id_for_label }}" placeholder="Votre mot de passe" required
+										autocomplete="current-password">
+									<button class="btn btn-outline-secondary" type="button" id="togglePassword"
+										title="Afficher/masquer le mot de passe">
+										<i class="fas fa-eye"></i>
+									</button>
+								</div>
+								{% if form.password.errors %}
+								<div class="invalid-feedback d-block">
+									{% for error in form.password.errors %}{{ error }}{% endfor %}
+								</div>
+								{% endif %}
+							</div>
+
+							<!-- Option "Se souvenir de moi" -->
+							<div class="mb-4">
+								<div class="form-check">
+									<input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
+									<label class="form-check-label" for="remember_me">
+										Se souvenir de mon nom d'utilisateur
+									</label>
+								</div>
+							</div>
+
+							<div class="d-grid">
+								<button type="submit" class="btn btn-login">
+									<i class="fas fa-sign-in-alt me-2"></i>
+									Se connecter
+								</button>
+							</div>
+						</form>
+
+						<hr class="my-4">
+
+						<div class="text-center">
+							<div class="row">
+								<div class="col-12 mb-2">
+									<small class="text-muted">
+										<i class="fas fa-shield-alt me-1"></i>
+										Connexion sécurisée
+									</small>
+								</div>
+								<div class="col-12">
+									<a href="/admin/" class="btn btn-outline-secondary btn-sm">
+										<i class="fas fa-cog me-1"></i>
+										Administration
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Footer de la page de connexion -->
+				<div class="text-center mt-3">
+					<p class="text-white small opacity-75">
+						© {% now "Y" %} Système de Suivi des Conducteurs
+						<br>
+						<i class="fas fa-code me-1"></i>
+						Développé avec Django
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}

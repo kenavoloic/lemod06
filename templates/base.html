@@ -4,101 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Suivi des Conducteurs{% endblock %}</title>
+    
+    <!-- CSS externes -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- CSS locaux -->
     {% load static %}
     <link href="{% static 'css/base.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Navigation (seulement si connecté) -->
     {% if user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'suivi_conducteurs:dashboard' %}">
-                <i class="fas fa-truck me-2"></i>Suivi Conducteurs
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'suivi_conducteurs:dashboard' %}">
-                            <i class="fas fa-home me-1"></i>Accueil
-                        </a>
-                    </li>
-                    
-                    {% if user.has_perm:'suivi_conducteurs.view_evaluation' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-clipboard-check me-1"></i>Évaluations
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'suivi_conducteurs:evaluation_list' %}">
-                                <i class="fas fa-list me-1"></i>Liste des évaluations
-                            </a></li>
-                            {% if user.has_perm:'suivi_conducteurs.add_evaluation' %}
-                            <li><a class="dropdown-item" href="{% url 'suivi_conducteurs:create_evaluation' %}">
-                                <i class="fas fa-plus me-1"></i>Nouvelle évaluation
-                            </a></li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    {% endif %}
-                    
-                    {% if user.has_perm:'auth.view_group' %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'gestion_groupes:dashboard' %}">
-                            <i class="fas fa-users-cog me-1"></i>Groupes
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-theme-toggle title="Basculer le thème">
-                            <i class="fas fa-moon"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle me-1"></i>{{ user.get_full_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'user_profile' %}">
-                                <i class="fas fa-user me-1"></i>Mon profil
-                            </a></li>
-                            <li><a class="dropdown-item" href="{% url 'change_password' %}">
-                                <i class="fas fa-key me-1"></i>Changer mot de passe
-                            </a></li>
-                            {% if user.is_staff %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/admin/">
-                                <i class="fas fa-cog me-1"></i>Administration
-                            </a></li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'user_logout' %}">
-                                <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+        {% include 'includes/navbar.html' %}
     {% endif %}
     
-    <main>
+    <!-- Messages système -->
+    {% include 'includes/messages.html' %}
+    
+    <!-- Contenu principal -->
+    <main class="{% block main_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </main>
     
+    <!-- Footer -->
+    {% block footer %}
+        {% if user.is_authenticated %}
+            {% include 'includes/footer.html' %}
+        {% endif %}
+    {% endblock %}
+    
+    <!-- JavaScript externes -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="{% static 'js/utils.js' %}"></script>
+    
+    <!-- JavaScript locaux -->
+    <script src="{% static 'js/utils.js' %}"></script>
+	<script src="{% static 'js/app.js' %}"></script>
+	
+	<!-- JavaScript spécifiques par page -->
 	{% block extra_js %}{% endblock %}
+	
+	<!-- Scripts d'initialisation -->
+	{% block init_scripts %}{% endblock %}
 	</body>
 	
 	</html>
