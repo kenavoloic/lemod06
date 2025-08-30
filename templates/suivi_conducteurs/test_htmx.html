@@ -1,0 +1,63 @@
+<!-- templates/suivi_conducteurs/test_htmx.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test HTMX</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Test HTMX - Chargement des critères</h1>
+        
+        <div class="row">
+            <div class="col-6">
+                <label>Type d'évaluation</label>
+                <select class="form-select" 
+                        hx-get="{% url 'suivi_conducteurs:load_criteres_htmx' %}"
+                        hx-target="#test-result"
+                        hx-trigger="change"
+                        hx-include="this">
+                    <option value="">Choisir...</option>
+                    {% for type_eval in types_evaluation %}
+                        <option value="{{ type_eval.id }}">{{ type_eval.nom }} (ID: {{ type_eval.id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div id="test-result" class="border p-3">
+                    <!-- Résultat HTMX ici -->
+                    <p class="text-muted">Sélectionnez un type d'évaluation pour voir les critères</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Données disponibles :</h3>
+                <ul>
+                    <li>Types d'évaluation : {{ types_evaluation.count }}</li>
+                    {% for type_eval in types_evaluation %}
+                        <li>{{ type_eval.nom }} - ID: {{ type_eval.id }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script>
+        // Debug HTMX
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            console.log('HTMX Request:', evt.detail);
+        });
+        
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            console.log('HTMX Response:', evt.detail);
+        });
+    </script>
+</body>
+</html>

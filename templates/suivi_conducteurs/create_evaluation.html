@@ -1,0 +1,283 @@
+<!-- templates/suivi_conducteurs/create_evaluation.html -->
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Créer une évaluation</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<style>
+		.validation-feedback {
+			display: block;
+			margin-top: 0.25rem;
+			font-size: 0.875rem;
+			transition: all 0.3s ease;
+		}
+	
+		.validation-feedback.valid {
+			color: #198754;
+		}
+	
+		.validation-feedback.invalid {
+			color: #dc3545;
+		}
+	
+		.form-control.valid {
+			border-color: #198754;
+			box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+		}
+	
+		.form-control.invalid {
+			border-color: #dc3545;
+			box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+		}
+	
+		.criteria-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: 1rem;
+			margin-top: 1rem;
+		}
+	
+		.criteria-card {
+			border: 1px solid #dee2e6;
+			border-radius: 0.375rem;
+			padding: 1rem;
+			background-color: #f8f9fa;
+		}
+	
+		.submit-btn {
+			opacity: 0.5;
+			cursor: not-allowed;
+			transition: all 0.3s ease;
+		}
+	
+		.submit-btn.enabled {
+			opacity: 1;
+			cursor: pointer;
+		}
+	
+		.loading {
+			display: none;
+		}
+	
+		.htmx-request .loading {
+			display: inline;
+		}
+	
+		.htmx-request .normal-content {
+			display: none;
+		}
+	</style>
+	</head>
+	
+	<body>
+		{% include 'includes/navbar.html' %}
+		<div class="container mt-4">
+		<div class="row">
+			<div class="col-md-12">
+				<h1 class="mb-4">
+					<i class="fas fa-clipboard-check text-primary"></i>
+					Créer une évaluation
+				</h1>
+
+				{% if messages %}
+				{% for message in messages %}
+				<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+					{{ message }}
+					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+				</div>
+				{% endfor %}
+				{% endif %}
+
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title mb-0">Informations de l'évaluation</h5>
+					</div>
+					<div class="card-body">
+						<form id="evaluation-form" method="post"
+							action="{% url 'suivi_conducteurs:submit_evaluation' %}">
+							{% csrf_token %}
+
+							<div class="row">
+								<div class="col-md-6">
+									<div class="mb-3">
+										<label for="conducteur" class="form-label">Conducteur à évaluer</label>
+										<select name="conducteur" id="conducteur" class="form-select" required>
+											<option value="">Sélectionner un conducteur</option>
+											{% for conducteur in conducteurs %}
+											<option value="{{ conducteur.id }}">
+												{{ conducteur.nom_complet }} - {{ conducteur.salsocid.socnom }}
+											</option>
+											{% endfor %}
+										</select>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="mb-3">
+										<label for="evaluateur" class="form-label">Évaluateur</label>
+										<select name="evaluateur" id="evaluateur" class="form-select" required>
+											<option value="">Sélectionner un évaluateur</option>
+											{% for evaluateur in evaluateurs %}
+											<option value="{{ evaluateur.id }}">
+												{{ evaluateur.nom_complet }} ({{ evaluateur.service.nom }})
+											</option>
+											{% endfor %}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-6">
+									<div class="mb-3">
+										<label for="type_evaluation" class="form-label">Type d'évaluation</label>
+										<select name="type_evaluation" id="type_evaluation" class="form-select" required
+											hx-get="{% url 'suivi_conducteurs:load_criteres_htmx' %}"
+											hx-target="#criteres-container" hx-trigger="change" hx-include="this">
+											<option value="">Sélectionner un type</option>
+											{% for type_eval in types_evaluation %}
+											<option value="{{ type_eval.id }}">{{ type_eval.nom }}</option>
+											{% endfor %}
+										</select>
+									</div>
+								</div>
+
+								<div class="col-md-6">
+									<div class="mb-3">
+										<label for="date_evaluation" class="form-label">Date d'évaluation</label>
+										<input type="date" name="date_evaluation" id="date_evaluation"
+											class="form-control" required>
+									</div>
+								</div>
+							</div>
+
+							<!-- Container pour les critères (chargé via HTMX) -->
+							<div id="criteres-container">
+								<!-- Les critères seront chargés ici via HTMX -->
+							</div>
+
+							<div class="d-flex justify-content-between mt-4">
+								<a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-secondary">
+									<i class="fas fa-arrow-left"></i> Retour à la liste
+								</a>
+								<button type="submit" id="submit-btn" class="btn btn-primary submit-btn" disabled>
+									<span class="normal-content">
+										<i class="fas fa-save"></i> Créer l'évaluation
+									</span>
+									<span class="loading">
+										<i class="fas fa-spinner fa-spin"></i> Création...
+									</span>
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="https://unpkg.com/htmx.org@1.9.6"></script>
+	<script>
+		// Gestion de la validation progressive
+		let validFields = new Set();
+		let requiredFields = new Set();
+
+		// Fonction pour vérifier si tous les champs sont valides
+		function checkFormValidity() {
+			const submitBtn = document.getElementById('submit-btn');
+			const allValid = requiredFields.size > 0 && validFields.size === requiredFields.size;
+
+			if (allValid) {
+				submitBtn.disabled = false;
+				submitBtn.classList.add('enabled');
+			} else {
+				submitBtn.disabled = true;
+				submitBtn.classList.remove('enabled');
+			}
+		}
+
+		// Validation des champs principaux
+		document.addEventListener('change', function (e) {
+			if (e.target.matches('#conducteur, #evaluateur, #type_evaluation, #date_evaluation')) {
+				if (e.target.value) {
+					validFields.add(e.target.id);
+					e.target.classList.remove('invalid');
+					e.target.classList.add('valid');
+				} else {
+					validFields.delete(e.target.id);
+					e.target.classList.remove('valid');
+					e.target.classList.add('invalid');
+				}
+				checkFormValidity();
+			}
+		});
+
+		// Gestion des réponses HTMX pour les critères
+		document.body.addEventListener('htmx:afterRequest', function (evt) {
+			if (evt.detail.target.id === 'criteres-container') {
+				// Réinitialiser les champs de notes
+				requiredFields.clear();
+				validFields.clear();
+
+				// Ajouter les champs principaux comme requis
+				['conducteur', 'evaluateur', 'type_evaluation', 'date_evaluation'].forEach(field => {
+					requiredFields.add(field);
+					const fieldElement = document.getElementById(field);
+					if (fieldElement && fieldElement.value) {
+						validFields.add(field);
+					}
+				});
+
+				// Ajouter les nouveaux champs de notes comme requis
+				const noteInputs = document.querySelectorAll('.note-input');
+				noteInputs.forEach(input => {
+					requiredFields.add(input.id);
+
+					// Validation en temps réel
+					input.addEventListener('input', function () {
+						const critereId = this.dataset.critereId;
+						const min = parseInt(this.min);
+						const max = parseInt(this.max);
+						const value = parseInt(this.value);
+						const validationDiv = document.getElementById(`validation-${critereId}`);
+
+						if (isNaN(value) || value < min || value > max) {
+							validFields.delete(this.id);
+							this.classList.remove('valid');
+							this.classList.add('invalid');
+							if (validationDiv) {
+								validationDiv.innerHTML = `<span class="validation-feedback invalid"><i class="fas fa-times-circle"></i> Entre ${min} et ${max}</span>`;
+							}
+						} else {
+							validFields.add(this.id);
+							this.classList.remove('invalid');
+							this.classList.add('valid');
+							if (validationDiv) {
+								validationDiv.innerHTML = `<span class="validation-feedback valid"><i class="fas fa-check-circle"></i> Valide</span>`;
+							}
+						}
+						checkFormValidity();
+					});
+				});
+
+				checkFormValidity();
+			}
+		});
+
+		// Validation finale avant soumission
+		document.getElementById('evaluation-form').addEventListener('submit', function (e) {
+			const submitBtn = document.getElementById('submit-btn');
+			if (submitBtn.disabled) {
+				e.preventDefault();
+				alert('Veuillez remplir tous les champs correctement avant de soumettre.');
+			}
+		});
+	</script>
+</body>
+
+</html>

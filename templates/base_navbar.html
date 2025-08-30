@@ -1,0 +1,346 @@
+<!-- templates/base_navbar.html - Template de base avec navbar -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Suivi des Conducteurs{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .navbar-nav .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 0.375rem;
+        }
+        .group-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            margin: 1px;
+            border-radius: 0.25rem;
+        }
+        .dropdown-menu-end {
+            min-width: 250px;
+        }
+        .user-info {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.8);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation principale -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <!-- Brand -->
+            <a class="navbar-brand" href="{% url 'suivi_conducteurs:dashboard' %}">
+                <i class="fas fa-truck me-2"></i>
+                <span class="fw-bold">Suivi Conducteurs</span>
+            </a>
+
+            <!-- Toggle button pour mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menu de navigation -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link {% block nav_dashboard %}{% endblock %}" href="{% url 'suivi_conducteurs:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Tableau de bord
+                        </a>
+                    </li>
+
+                    <!-- Menu Évaluations -->
+                    {% if user.has_perm:"suivi_conducteurs.view_evaluation" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% block nav_evaluations %}{% endblock %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-clipboard-check me-1"></i>
+                            Évaluations
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'suivi_conducteurs:evaluation_list' %}">
+                                    <i class="fas fa-list me-2"></i>
+                                    Toutes les évaluations
+                                </a>
+                            </li>
+                            {% if user.has_perm:"suivi_conducteurs.add_evaluation" %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'suivi_conducteurs:create_evaluation' %}">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    Nouvelle évaluation
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <h6 class="dropdown-header">Rapports</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Fonction à développer')">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Statistiques
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    <!-- Menu Conducteurs -->
+                    {% if user.has_perm:"suivi_conducteurs.view_conducteur" %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% block nav_conducteurs %}{% endblock %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-users me-1"></i>
+                            Conducteurs
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Vue à développer')">
+                                    <i class="fas fa-list me-2"></i>
+                                    Liste des conducteurs
+                                </a>
+                            </li>
+                            {% if user.has_perm:"suivi_conducteurs.add_conducteur" %}
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Vue à développer')">
+                                    <i class="fas fa-user-plus me-2"></i>
+                                    Nouveau conducteur
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Vue à développer')">
+                                    <i class="fas fa-building me-2"></i>
+                                    Sociétés
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Vue à développer')">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    Sites
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    <!-- Menu Gestion (pour les administrateurs) -->
+                    {% if user.has_perm:"auth.view_group" or user.is_staff %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% block nav_gestion %}{% endblock %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cogs me-1"></i>
+                            Gestion
+                        </a>
+                        <ul class="dropdown-menu">
+                            {% if user.has_perm:"auth.view_group" %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'gestion_groupes:dashboard' %}">
+                                    <i class="fas fa-users-cog me-2"></i>
+                                    Groupes et utilisateurs
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'gestion_groupes:liste_utilisateurs' %}">
+                                    <i class="fas fa-user-friends me-2"></i>
+                                    Utilisateurs
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'gestion_groupes:historique' %}">
+                                    <i class="fas fa-history me-2"></i>
+                                    Historique
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user.is_staff %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/admin/">
+                                    <i class="fas fa-tools me-2"></i>
+                                    Administration Django
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Menu utilisateur -->
+                <ul class="navbar-nav">
+                    <!-- Notifications (placeholder) -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge bg-danger badge-sm">3</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <h6 class="dropdown-header">Notifications récentes</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-info-circle text-info me-2"></i>
+                                    Nouvelle évaluation créée
+                                    <br><small class="text-muted">Il y a 2 heures</small>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-center" href="#" onclick="alert('Fonction à développer')">
+                                    Voir toutes les notifications
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Profil utilisateur -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <i class="fas fa-user-circle fa-lg"></i>
+                                </div>
+                                <div class="d-none d-md-block">
+                                    <div class="user-info">
+                                        <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                        {% if user.groups.all %}
+                                            <br>
+                                            {% for groupe in user.groups.all %}
+                                                <span class="badge group-badge" 
+                                                      style="background-color: {% if groupe.groupe_etendu %}{{ groupe.groupe_etendu.couleur }}{% else %}#6c757d{% endif %};">
+                                                    {{ groupe.name }}
+                                                </span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <div class="dropdown-item-text">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle fa-2x me-3"></i>
+                                        <div>
+                                            <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                            <br><small class="text-muted">{{ user.email|default:"Pas d'email" }}</small>
+                                            <br>
+                                            {% if user.is_superuser %}
+                                                <span class="badge bg-danger">Super Admin</span>
+                                            {% elif user.is_staff %}
+                                                <span class="badge bg-warning text-dark">Staff</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Utilisateur</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'user_profile' %}">
+                                    <i class="fas fa-user me-2"></i>
+                                    Mon profil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'change_password' %}">
+                                    <i class="fas fa-key me-2"></i>
+                                    Changer mot de passe
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="toggleTheme()">
+                                    <i class="fas fa-palette me-2"></i>
+                                    Thème sombre
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="alert('Fonction à développer')">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Préférences
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'user_logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    Déconnexion
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages système -->
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-2" role="alert">
+                    <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'danger' %}fa-exclamation-triangle{% elif message.tags == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Contenu principal -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-truck me-2"></i>
+                        Système de Suivi des Conducteurs &copy; 2025
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-muted">
+                        Connecté en tant que {{ user.username }} | 
+                        <a href="{% url 'user_profile' %}" class="text-decoration-none">Mon profil</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+		// Fonction pour basculer le thème (placeholder)
+		function toggleTheme() {
+			alert('Basculement de thème - Fonction à développer');
+		}
+
+		// Auto-hide alerts after 5 seconds
+		document.addEventListener('DOMContentLoaded', function () {
+			setTimeout(function () {
+				const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+				alerts.forEach(function (alert) {
+					const bsAlert = new bootstrap.Alert(alert);
+					bsAlert.close();
+				});
+			}, 5000);
+		});
+	</script>
+	
+	{% block extra_js %}{% endblock %}
+	</body>
+	
+	</html>

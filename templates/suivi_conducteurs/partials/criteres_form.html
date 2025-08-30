@@ -1,0 +1,58 @@
+<!-- templates/suivi_conducteurs/partials/criteres_form.html -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-star text-warning"></i>
+            Critères d'évaluation - {{ type_evaluation.nom }}
+            <small class="text-muted">({{ criteres.count }} critères actifs)</small>
+        </h5>
+        <p class="card-text text-muted mb-0">{{ type_evaluation.description }}</p>
+    </div>
+    <div class="card-body">
+        <div class="criteria-grid">
+            {% for critere in criteres %}
+                <div class="criteria-card">
+                    <label for="note_{{ critere.id }}" class="form-label fw-bold">
+                        Critère {{ critere.nom }}
+                        <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="number" 
+                               name="note_{{ critere.id }}" 
+                               id="note_{{ critere.id }}"
+                               class="form-control note-input"
+                               min="{{ critere.valeur_mini }}" 
+                               max="{{ critere.valeur_maxi }}"
+                               data-critere-id="{{ critere.id }}"
+                               placeholder="Note sur {{ critere.valeur_maxi }}"
+                               required>
+                        <span class="input-group-text">/ {{ critere.valeur_maxi }}</span>
+                    </div>
+                    <div id="validation-{{ critere.id }}" class="validation-container">
+                        <span class="validation-feedback text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            Entre {{ critere.valeur_mini }} et {{ critere.valeur_maxi }}
+                        </span>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Aucun critère actif trouvé pour ce type d'évaluation.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if criteres %}
+            <div class="mt-3 p-3 bg-light rounded">
+                <small class="text-muted">
+                    <i class="fas fa-lightbulb"></i>
+					<strong>Conseils :</strong> Utilisez l'échelle de {{ criteres.0.valeur_mini }} à {{ criteres.0.valeur_maxi }}.
+					Les champs deviennent verts quand ils sont correctement remplis.
+					</small>
+					</div>
+					{% endif %}
+					</div>
+					</div>

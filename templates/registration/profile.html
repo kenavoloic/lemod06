@@ -1,0 +1,197 @@
+<!-- templates/registration/profile.html -->
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Mon Profil - {{ user.get_full_name|default:user.username }}</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+		<div class="container">
+			<a class="navbar-brand" href="{% url 'suivi_conducteurs:dashboard' %}">
+				<i class="fas fa-truck me-2"></i>Suivi Conducteurs
+			</a>
+			<div class="navbar-nav ms-auto">
+				<a class="nav-link" href="{% url 'user_logout' %}">
+					<i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+				</a>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container mt-4">
+		<div class="row">
+			<!-- Profil principal -->
+			<div class="col-md-8">
+				<div class="card">
+					<div class="card-header bg-primary text-white">
+						<h4 class="card-title mb-0">
+							<i class="fas fa-user-circle me-2"></i>Mon Profil
+						</h4>
+					</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<h5>Informations personnelles</h5>
+								<p><strong>Nom d'utilisateur :</strong> {{ user.username }}</p>
+								<p><strong>Nom complet :</strong> {{ user.get_full_name|default:"Non renseigné" }}</p>
+								<p><strong>Email :</strong> {{ user.email|default:"Non renseigné" }}</p>
+								<p><strong>Membre depuis :</strong> {{ stats.date_joined|date:"d/m/Y" }}</p>
+								<p><strong>Dernière connexion :</strong>
+									{{ stats.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</p>
+							</div>
+							<div class="col-md-6">
+								<h5>Informations professionnelles</h5>
+								{% if profil %}
+								<p><strong>Service :</strong> {{ profil.service }}</p>
+								<p><strong>Poste :</strong> {{ profil.poste }}</p>
+								<p><strong>Téléphone :</strong> {{ profil.telephone|default:"Non renseigné" }}</p>
+								<p><strong>Date d'embauche :</strong>
+									{{ profil.date_embauche|date:"d/m/Y"|default:"Non renseigné" }}</p>
+								<p><strong>Statut :</strong>
+									<span class="badge bg-{% if profil.actif %}success{% else %}secondary{% endif %}">
+										{% if profil.actif %}Actif{% else %}Inactif{% endif %}
+									</span>
+								</p>
+								{% else %}
+								<p class="text-muted">Profil non configuré</p>
+								{% endif %}
+							</div>
+						</div>
+
+						<hr>
+
+						<div class="row">
+							<div class="col-md-12">
+								<h5>Mes groupes et permissions</h5>
+								{% if user.groups.all %}
+								<div class="mb-3">
+									{% for groupe in user.groups.all %}
+									<span class="badge me-2 p-2"
+										style="background-color: {% if groupe.groupe_etendu %}{{ groupe.groupe_etendu.couleur }}{% else %}#6c757d{% endif %};">
+										<i class="fas fa-users me-1"></i>{{ groupe.name }}
+										{% if groupe.groupe_etendu %}
+										(Niveau {{ groupe.groupe_etendu.niveau_acces }})
+										{% endif %}
+									</span>
+									{% endfor %}
+								</div>
+								{% else %}
+								<p class="text-muted">Aucun groupe assigné</p>
+								{% endif %}
+
+								<div class="row text-center">
+									<div class="col-4">
+										<div class="bg-light p-3 rounded">
+											<h4 class="text-primary">{{ stats.groupes_count }}</h4>
+											<small class="text-muted">Groupe{{ stats.groupes_count|pluralize }}</small>
+										</div>
+									</div>
+									<div class="col-4">
+										<div class="bg-light p-3 rounded">
+											<h4 class="text-info">{{ stats.permissions_count }}</h4>
+											<small class="text-muted">Permission{{ stats.permissions_count|pluralize
+												}}</small>
+										</div>
+									</div>
+									<div class="col-4">
+										<div class="bg-light p-3 rounded">
+											<h4
+												class="{% if stats.is_superuser %}text-danger{% else %}text-success{% endif %}">
+												{% if stats.is_superuser %}Admin{% elif stats.is_staff %}Staff{% else
+												%}User{% endif %}
+											</h4>
+											<small class="text-muted">Statut</small>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<hr>
+
+						<div class="text-center">
+							<a href="{% url 'change_password' %}" class="btn btn-warning">
+								<i class="fas fa-key me-1"></i>Changer le mot de passe
+							</a>
+							<a href="{% url 'suivi_conducteurs:dashboard' %}" class="btn btn-primary">
+								<i class="fas fa-dashboard me-1"></i>Retour au dashboard
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Historique des groupes -->
+			<div class="col-md-4">
+				<div class="card">
+					<div class="card-header bg-info text-white">
+						<h5 class="card-title mb-0">
+							<i class="fas fa-history me-2"></i>Historique des groupes
+						</h5>
+					</div>
+					<div class="card-body">
+						{% if historique_groupes %}
+						{% for action in historique_groupes %}
+						<div class="border-start border-3 ps-3 mb-3">
+							<div class="d-flex justify-content-between">
+								<strong class="text-primary">{{ action.group.name }}</strong>
+								<small class="text-muted">{{ action.date_action|date:"d/m H:i" }}</small>
+							</div>
+							<small class="text-muted">{{ action.get_action_display }}</small>
+							{% if action.utilisateur_modifieur %}
+							<br><small class="text-secondary">par {{ action.utilisateur_modifieur.username }}</small>
+							{% endif %}
+						</div>
+						{% endfor %}
+						{% else %}
+						<p class="text-muted text-center">Aucun historique</p>
+						{% endif %}
+					</div>
+				</div>
+
+				<!-- Actions rapides -->
+				<div class="card mt-3">
+					<div class="card-header bg-success text-white">
+						<h5 class="card-title mb-0">
+							<i class="fas fa-bolt me-2"></i>Actions rapides
+						</h5>
+					</div>
+					<div class="card-body">
+						<div class="d-grid gap-2">
+							<a href="{% url 'suivi_conducteurs:evaluation_list' %}"
+								class="btn btn-outline-primary btn-sm">
+								<i class="fas fa-list me-1"></i>Voir les évaluations
+							</a>
+							{% if perms.suivi_conducteurs.add_evaluation %}
+							<a href="{% url 'suivi_conducteurs:create_evaluation' %}"
+								class="btn btn-outline-success btn-sm">
+								<i class="fas fa-plus me-1"></i>Nouvelle évaluation
+							</a>
+							{% endif %}
+							{% if perms.auth.view_group %}
+							<a href="{% url 'gestion_groupes:dashboard' %}" class="btn btn-outline-info btn-sm">
+								<i class="fas fa-users me-1"></i>Gestion groupes
+							</a>
+							{% endif %}
+							{% if user.is_staff %}
+							<a href="/admin/" class="btn btn-outline-secondary btn-sm">
+								<i class="fas fa-cog me-1"></i>Administration
+							</a>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	</body>
+	
+	</html>

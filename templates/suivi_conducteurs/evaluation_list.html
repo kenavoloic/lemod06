@@ -1,0 +1,188 @@
+<!-- templates/suivi_conducteurs/evaluation_list.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des évaluations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .filter-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(0,123,255,.075);
+        }
+        .badge-type {
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+        }
+        .evaluation-status {
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+		{% include 'includes/navbar.html' %}
+  <div class="container-fluid mt-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="display-6">
+                    <i class="fas fa-list-alt text-primary"></i>
+                    Évaluations des conducteurs
+                </h1>
+                <p class="text-muted">Gérez et consultez toutes les évaluations</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus"></i> Nouvelle évaluation
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card filter-card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="conducteur" class="form-label">Conducteur</label>
+                                <select name="conducteur" id="conducteur" class="form-select">
+                                    <option value="">Tous les conducteurs</option>
+                                    {% for conducteur in conducteurs %}
+                                        <option value="{{ conducteur.id }}" 
+                                                {% if request.GET.conducteur == conducteur.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ conducteur.nom_complet }} - {{ conducteur.salsocid.socnom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="type_evaluation" class="form-label">Type d'évaluation</label>
+                                <select name="type_evaluation" id="type_evaluation" class="form-select">
+                                    <option value="">Tous les types</option>
+                                    {% for type_eval in types_evaluation %}
+                                        <option value="{{ type_eval.id }}"
+                                                {% if request.GET.type_evaluation == type_eval.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ type_eval.nom }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-filter"></i> Filtrer
+                                </button>
+                                <a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Effacer
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des évaluations -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-table"></i>
+                            Évaluations ({{ evaluations.count }} résultat{{ evaluations.count|pluralize }})
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if evaluations %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Conducteur</th>
+                                            <th>Société</th>
+                                            <th>Type d'évaluation</th>
+                                            <th>Évaluateur</th>
+                                            <th>Service</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for evaluation in evaluations %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-calendar text-muted me-1"></i>
+                                                    {{ evaluation.date_evaluation|date:"d/m/Y" }}
+                                                </td>
+                                                <td>
+                                                    <strong>{{ evaluation.conducteur.nom_complet }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-map-marker-alt"></i>
+                                                        {{ evaluation.conducteur.site.nom_commune }}
+                                                    </small>
+                                                </td>
+                                                <td>{{ evaluation.conducteur.salsocid.socnom }}</td>
+                                                <td>
+                                                    <span class="badge badge-type
+                                                        {% if evaluation.type_evaluation.abreviation == 'rh1' %}bg-info
+                                                        {% elif evaluation.type_evaluation.abreviation == 'ex1' %}bg-success  
+                                                        {% else %}bg-warning text-dark{% endif %}">
+                                                        {{ evaluation.type_evaluation.nom }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ evaluation.evaluateur.nom_complet }}</td>
+                                                <td>
+                                                    <small class="text-muted">{{ evaluation.evaluateur.service.nom }}</small>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{% url 'suivi_conducteurs:evaluation_detail' evaluation.pk %}" 
+                                                           class="btn btn-sm btn-outline-primary" 
+                                                           title="Voir le détail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <button class="btn btn-sm btn-outline-info" 
+                                                                title="Imprimer"
+                                                                onclick="window.open('{% url 'suivi_conducteurs:evaluation_detail' evaluation.pk %}', '_blank'); setTimeout(() => window.print(), 1000);">
+                                                            <i class="fas fa-print"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <div class="mb-3">
+                                    <i class="fas fa-search fa-3x text-muted"></i>
+                                </div>
+                                <h5 class="text-muted">Aucune évaluation trouvée</h5>
+                                <p class="text-muted">
+                                    {% if request.GET.conducteur or request.GET.type_evaluation %}
+                                        Essayez de modifier vos filtres ou 
+                                        <a href="{% url 'suivi_conducteurs:evaluation_list' %}">afficher toutes les évaluations</a>.
+                                    {% else %}
+                                        Commencez par <a href="{% url 'suivi_conducteurs:create_evaluation' %}">créer une nouvelle évaluation</a>.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	</body>
+	
+	</html>

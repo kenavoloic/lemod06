@@ -1,0 +1,162 @@
+<!-- templates/suivi_conducteurs/dashboard.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Suivi des Conducteurs - Dashboard</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	</head>
+	
+	<body>
+		{% include 'includes/navbar.html' %}
+		<div class="container-fluid mt-4">
+        <!-- En-tête -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-tachometer-alt text-primary"></i>
+                    Suivi des Conducteurs
+                </h1>
+                <p class="text-muted">Évaluations des conducteurs</p>
+            </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                        <h3 class="text-primary">{{ total_conducteurs }}</h3>
+                        <p class="text-muted">Conducteurs actifs</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-clipboard-check fa-3x text-success mb-3"></i>
+                        <h3 class="text-success">{{ total_evaluations }}</h3>
+                        <p class="text-muted">Évaluations totales</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-month fa-3x text-info mb-3"></i>
+                        <h3 class="text-info">{{ evaluations_ce_mois }}</h3>
+                        <p class="text-muted">Ce mois-ci</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="fas fa-plus fa-3x text-warning mb-3"></i>
+                        <h3 class="text-warning">
+                            <a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-warning">
+                                Nouvelle
+                            </a>
+                        </h3>
+                        <p class="text-muted">Évaluation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-bolt"></i>
+                            Actions rapides
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Nouvelle évaluation
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-info btn-lg w-100">
+                                    <i class="fas fa-list"></i>
+                                    Voir les évaluations
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <a href="/admin/" class="btn btn-secondary btn-lg w-100">
+                                    <i class="fas fa-cog"></i>
+                                    Administration
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Évaluations récentes -->
+        {% if evaluations_recentes %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-history"></i>
+                            Évaluations récentes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Conducteur</th>
+                                        <th>Type</th>
+                                        <th>Évaluateur</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for evaluation in evaluations_recentes %}
+                                    <tr>
+                                        <td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
+                                        <td>{{ evaluation.conducteur.nom_complet }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ evaluation.type_evaluation.nom }}</span>
+                                        </td>
+                                        <td>{{ evaluation.evaluateur.nom_complet }}</td>
+                                        <td>
+                                            <a href="{% url 'suivi_conducteurs:evaluation_detail' evaluation.pk %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Voir
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+	</body>
+	
+	</html>
