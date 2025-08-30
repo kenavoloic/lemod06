@@ -74,7 +74,7 @@
 						<select name="conducteur" id="conducteur" class="form-select">
 							<option value="">Tous les conducteurs</option>
 							{% for conducteur in conducteurs %}
-							<option value="{{ conducteur.id }}" {% if selected_conducteur_id==conducteur.id %}
+							<option value="{{ conducteur.id }}" {% if selected_conducteur_id == conducteur.id %}
 								selected{% endif %}>
 								{{ conducteur.nom_complet }} - {{ conducteur.salsocid.socnom }}
 							</option>
@@ -87,7 +87,7 @@
 						<select name="type_evaluation" id="type_evaluation" class="form-select">
 							<option value="">Tous les types</option>
 							{% for type_eval in types_evaluation %}
-							<option value="{{ type_eval.id }}" {% if selected_type_id==type_eval.id %} selected{% endif
+							<option value="{{ type_eval.id }}" {% if selected_type_id == type_eval.id %} selected{% endif
 								%}>
 								{{ type_eval.nom }}
 							</option>
