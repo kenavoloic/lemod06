@@ -1,4 +1,4 @@
-<!-- templates/suivi_conducteurs/evaluation_list.html -->
+<!-- templates/suivi_conducteurs/evaluation_list.html - Version complètement vérifiée -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -87,8 +87,7 @@
 						<select name="type_evaluation" id="type_evaluation" class="form-select">
 							<option value="">Tous les types</option>
 							{% for type_eval in types_evaluation %}
-							<option value="{{ type_eval.id }}" {% if selected_type_id == type_eval.id %} selected{% endif
-								%}>
+							<option value="{{ type_eval.id }}" {% if selected_type_id == type_eval.id %} selected {% endif	%}>
 								{{ type_eval.nom }}
 							</option>
 							{% endfor %}

@@ -1177,3 +1177,60 @@ class Migration(migrations.Migration):
         ),
     ]
 #+end_src
+
+* Gestion groupes
+Basée sur models.py
+3 groupes : RH, Exploitation, Direction
+
+RH:
+crée Conducteur
+supprime Conducteur
+modifie Conducteur
+consulte Conducteur
+
+crée Evaluateur
+modifie Evaluateur
+supprime Evaluateur
+consulte Evaluateur
+
+crée Site
+modifie Site 
+supprime Site
+consulte Site 
+
+crée Société
+modifie Société
+supprime Société
+consulte Société
+
+crée Service
+modifie Service 
+supprime Service
+consulte Service 
+
+crée CritereEvaluation
+modifie CritereEvaluation
+supprime CritereEvaluation
+consulte CritereEvaluation
+
+crée Evaluation
+modifie Evaluation
+supprime Evaluation
+consulte Evaluation
+
+crée TypologieEvaluation
+modifie TypologieEvaluation
+supprime TypologieEvaluation
+consulte TypologieEvaluation
+
+Exploitation:
+consulte Conducteur
+modifie conducteur
+
+crée Evaluation
+modifie Evaluation
+supprime Evaluation
+consulte Evaluation 
+
+Direction:
+Uniquement des droits de consultation 
