@@ -203,7 +203,7 @@ class CustomGroupAdmin(GroupAdmin):
             return f"Niveau {obj.groupe_etendu.niveau_acces}"
         except:
             return "Non défini"
-    niveau_acces_display.short_description = 'Niveau d\'accès'
+    niveau_acces_display.short_description = "Niveau d'accès"
     
     def utilisateurs_count(self, obj):
         count = obj.user_set.count()

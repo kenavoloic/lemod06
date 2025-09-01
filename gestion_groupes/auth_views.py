@@ -47,11 +47,11 @@ def user_login(request):
                     else:
                         return redirect('/dashboard/')  # Redirection vers dashboard
                 else:
-                    messages.error(request, 'Votre compte est désactivé.')
+                    messages.error(request, "Votre compte est désactivé.")
             else:
-                messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect.')
+                messages.error(request, "Nom d'utilisateur ou mot de passe incorrect.")
         else:
-            messages.error(request, 'Erreur dans le formulaire de connexion.')
+            messages.error(request, "Erreur dans le formulaire de connexion.")
     else:
         # Si l'utilisateur est déjà connecté
         if request.user.is_authenticated:
@@ -61,7 +61,7 @@ def user_login(request):
     
     context = {
         'form': form,
-        'title': 'Connexion - Suivi des Conducteurs',
+        'title': "Connexion - Suivi des Conducteurs",
     }
     return render(request, 'registration/login.html', context)
 
@@ -120,16 +120,16 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)  # Maintenir la session
-            messages.success(request, 'Votre mot de passe a été modifié avec succès !')
+            messages.success(request, "Mot de passe modifié avec succès !")
             return redirect('user_profile')
         else:
-            messages.error(request, 'Veuillez corriger les erreurs ci-dessous.')
+            messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
     else:
         form = PasswordChangeForm(request.user)
     
     context = {
         'form': form,
-        'title': 'Changer le mot de passe',
+        'title': "Changer le mot de passe",
     }
     return render(request, 'registration/change_password.html', context)
 
@@ -182,8 +182,8 @@ def dashboard_stats(request):
 def access_denied(request, exception=None):
     """Vue pour les erreurs 403 - Accès refusé"""
     context = {
-        'title': 'Accès refusé',
-        'message': 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page.',
+        'title': "Accès refusé",
+        'message': "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
         'user': request.user if request.user.is_authenticated else None,
     }
     return render(request, 'registration/403.html', context, status=403)
@@ -192,8 +192,8 @@ def access_denied(request, exception=None):
 def page_not_found(request, exception):
     """Vue pour les erreurs 404 - Page non trouvée"""
     context = {
-        'title': 'Page non trouvée',
-        'message': 'La page que vous recherchez n\'existe pas.',
+        'title': "Page non trouvée",
+        'message': "La page que vous recherchez n'existe pas.",
         'request_path': request.path,
     }
     return render(request, 'registration/404.html', context, status=404)
@@ -202,7 +202,7 @@ def page_not_found(request, exception):
 def server_error(request):
     """Vue pour les erreurs 500 - Erreur serveur"""
     context = {
-        'title': 'Erreur du serveur',
-        'message': 'Une erreur interne s\'est produite. Veuillez réessayer plus tard.',
+        'title': "Erreur du serveur",
+        'message': "Une erreur interne s'est produite. Veuillez réessayer plus tard.",
     }
     return render(request, 'registration/500.html', context, status=500)
