@@ -50,13 +50,23 @@ def dashboard(request):
 def create_evaluation(request):
     """Vue principale pour créer une évaluation"""
     conducteurs = Conducteur.objects.filter(salactif=True).select_related('salsocid', 'site')
-    evaluateurs = Evaluateur.objects.all().select_related('service')
     types_evaluation = TypologieEvaluation.objects.all()
+    #evaluateurs = Evaluateur.objects.all().select_related('service')
+    # evaluateurs = Evaluateur.objects.filter(
+    #     service__nom__in=['Ressources Humaines', 'Exploitation']
+    # ).select_related('service').order_by('service__nom', 'nom', 'prenom')
+
+    # Filtrer les évaluateurs pour ne garder que ceux des groupes RH et Exploitation
+    evaluateurs = Evaluateur.objects.filter(
+        user__groups__name__in=['RH', 'Exploitation']
+    ).select_related('service', 'user').prefetch_related('user__groups__groupe_etendu').distinct()
     
+
     context = {
         'conducteurs': conducteurs,
         'evaluateurs': evaluateurs,
         'types_evaluation': types_evaluation,
+        'services_autorises': ['Ressources Humaines', 'Exploitation'],
     }
     return render(request, 'suivi_conducteurs/create_evaluation.html', context)
 

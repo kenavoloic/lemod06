@@ -126,6 +126,14 @@ class Evaluateur(models.Model):
     nom = models.CharField(max_length=255, verbose_name="nom")
     prenom = models.CharField(max_length=255, verbose_name="prénom")
     service = models.ForeignKey(Service, on_delete=models.CASCADE, verbose_name="Service")
+    user = models.OneToOneField(
+        'auth.User', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        verbose_name="Compte utilisateur",
+        help_text="Compte utilisateur Django associé à cet évaluateur"
+    )
 
     def __str__(self):
             return f"{self.service.nom} {self.nom} {self.prenom}"
@@ -134,11 +142,28 @@ class Evaluateur(models.Model):
     def nom_complet(self):
         return f"{self.prenom} {self.nom}"
 
+    def can_evaluate(self):
+        """Vérifie si cet évaluateur peut évaluer (RH ou Exploitation)"""
+        services_autorises = ['Ressources Humaines', 'Exploitation']
+        return self.service.nom in services_autorises
+    
+    def get_user_groups(self):
+        """Retourne les groupes de l'utilisateur associé"""
+        if self.user:
+            return self.user.groups.values_list('name', flat=True)
+        return []
+    
     def clean(self):
         if self.nom:
             self.nom = self.nom.strip()
         if self.prenom:
             self.prenom = self.prenom.strip()
+
+        if self.service_id and not self.can_evaluate():
+            raise ValidationError({
+                'service': f"Le service '{self.service.nom}' n'est pas autorisé à effectuer des évaluations."
+            })
+        
 
     class Meta:
         verbose_name = "Évaluateur"

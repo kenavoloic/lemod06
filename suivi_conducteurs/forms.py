@@ -1,6 +1,7 @@
 # forms.py
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Group
 from .models import Evaluation, Conducteur, Evaluateur, TypologieEvaluation, CritereEvaluation
 
 
@@ -40,20 +41,48 @@ class EvaluationForm(forms.ModelForm):
         self.fields['conducteur'].queryset = Conducteur.objects.filter(
             salactif=True
         ).select_related('salsocid', 'site').order_by('salnom', 'salnom2')
-        
-        # Tous les évaluateurs
-        self.fields['evaluateur'].queryset = Evaluateur.objects.select_related(
-            'service'
-        ).order_by('service__nom', 'nom', 'prenom')
-        
-        # Tous les types d'évaluation
+
+        # Filtrer les évaluateurs selon leurs groupes d'appartenance
+        groupes_evaluateurs = Group.objects.filter(name__in=['RH', 'Exploitation'])
+
+        self.fields['evaluateur'].queryset = Evaluateur.objects.filter(
+            service__nom__in=['Ressources Humaines', 'Exploitation']
+            ).select_related('service').order_by('service__nom', 'nom', 'prenom').distinct()
+
         self.fields['type_evaluation'].queryset = TypologieEvaluation.objects.all()
+        
+                
+        # # Tous les évaluateurs
+        # self.fields['evaluateur'].queryset = Evaluateur.objects.select_related(
+        #     'service'
+        # ).order_by('service__nom', 'nom', 'prenom')
+        
+        # # Tous les types d'évaluation
+        # self.fields['type_evaluation'].queryset = TypologieEvaluation.objects.all()
         
         # Labels personnalisés
         self.fields['conducteur'].label = "Conducteur à évaluer"
-        self.fields['evaluateur'].label = "Évaluateur"
+        self.fields['evaluateur'].label = "Évaluateur (RH/Exploitation)"
         self.fields['type_evaluation'].label = "Type d'évaluation"
         self.fields['date_evaluation'].label = "Date d'évaluation"
+
+        self.fields['evaluateur'].help_text = "Seuls les membres des services RH et Exploitation peuvent évaluer"
+    def clean_evaluateur(self):
+        """Validation supplémentaire côté serveur pour l'évaluateur"""
+        evaluateur = self.cleaned_data.get('evaluateur')
+        
+        if evaluateur:
+            # Vérifier que l'évaluateur appartient bien aux services autorisés
+            services_autorises = ['Ressources Humaines', 'Exploitation']
+            
+            if evaluateur.service.nom not in services_autorises:
+                raise ValidationError(
+                    f"L'évaluateur doit appartenir au service RH ou Exploitation. "
+                    f"Service actuel : {evaluateur.service.nom}"
+                )
+        return evaluateur
+    
+    
     
     def clean(self):
         cleaned_data = super().clean()
