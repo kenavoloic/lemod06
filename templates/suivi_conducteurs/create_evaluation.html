@@ -55,16 +55,22 @@
 								<select name="evaluateur" id="evaluateur" class="form-select" required>
 									<option value="">Sélectionner un évaluateur</option>
 									{% for evaluateur in evaluateurs %}
-									<option value="{{ evaluateur.id }}" data-service="{{ evaluateur.service.nom }}">
-										{{ evaluateur.nom_complet }} - {{ evaluateur.service.nom }}
-										{% if evaluateur.user %}
-										{% with groups=evaluateur.user.groups.all %}
-										{% if groups %}
-										({{ groups|join:", " }})
-										{% endif %}
-										{% endwith %}
-										{% endif %}
-									</option>
+		<option value="{{ evaluateur.id }}"
+			data-groups="{% if evaluateur.user %}{% for group in evaluateur.user.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% endfor %}{% endif %}">
+			{{ evaluateur.nom_complet }} - {{ evaluateur.service.nom }}
+			{% if evaluateur.service.abreviation %}({{ evaluateur.service.abreviation }}){% endif %}
+		</option>
+									<!-- <option value="{{ evaluateur.id }}"
+																			data-service="{{ evaluateur.service.nom }}">
+																			{{ evaluateur.nom_complet }} - {{ evaluateur.service.nom }}
+																			{% if evaluateur.user %}
+																			{% with groups=evaluateur.user.groups.all %}
+																			{% if groups %}
+																			({{ groups|join:", " }})
+																			{% endif %}
+																			{% endwith %}
+																			{% endif %}
+																		</option> -->
 									{% endfor %}
 								</select>
 								<div class="form-text">
@@ -145,8 +151,7 @@
 						<a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-secondary">
 							<i class="fas fa-arrow-left"></i> Retour à la liste
 						</a>
-						<button type="submit" id="submit-btn" class="btn btn-primary submit-btn" disabled {% if not
-							evaluateurs %} style="display: none;" {% endif %}>
+						<button type="submit" id="submit-btn" class="btn btn-primary submit-btn" disabled {% if not evaluateurs %} style="display: none;" {% endif %}>
 							<span class="normal-content">
 								<i class="fas fa-save"></i> Créer l'évaluation
 							</span>
