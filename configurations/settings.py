@@ -57,7 +57,10 @@ ROOT_URLCONF = 'configurations.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'templates',
+            BASE_DIR / 'templatetags',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -65,6 +68,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'custom_filters': 'templatetags.custom_filters',
+                }
         },
     },
 ]

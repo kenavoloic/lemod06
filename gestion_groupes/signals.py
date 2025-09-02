@@ -66,6 +66,10 @@ def track_user_group_changes(sender, instance, action, pk_set, **kwargs):
                     utilisateur_cible=user,
                     details=f'Ajout de {user.username} au groupe {instance.name}'
                 )
+                
+                # NOUVEAU : Créer automatiquement un évaluateur si ajouté à RH ou Exploitation
+                create_evaluateur_if_needed(user)
+                
             except User.DoesNotExist:
                 pass
     
@@ -79,9 +83,140 @@ def track_user_group_changes(sender, instance, action, pk_set, **kwargs):
                     utilisateur_cible=user,
                     details=f'Retrait de {user.username} du groupe {instance.name}'
                 )
+                
+                # NOUVEAU : Vérifier s'il faut supprimer l'évaluateur
+                update_evaluateur_status(user)
+                
             except User.DoesNotExist:
                 pass
 
+
+def create_evaluateur_if_needed(user):
+    """
+    Crée automatiquement un évaluateur si l'utilisateur appartient à RH ou Exploitation
+    """
+    from suivi_conducteurs.models import Evaluateur, Service
+    
+    # Vérifier si l'utilisateur appartient à RH ou Exploitation
+    groupes_evaluateurs = ['RH', 'Exploitation']
+    user_groups = user.groups.filter(name__in=groupes_evaluateurs).values_list('name', flat=True)
+    
+    if user_groups:
+        # L'utilisateur est dans un groupe évaluateur
+        try:
+            evaluateur = Evaluateur.objects.get(user=user)
+            # Mettre à jour le service si nécessaire
+            nouveau_service = determine_service_from_groups(list(user_groups))
+            if nouveau_service and evaluateur.service != nouveau_service:
+                evaluateur.service = nouveau_service
+                evaluateur.save()
+                print(f"Service de l'évaluateur {user.username} mis à jour : {nouveau_service.nom}")
+        
+        except Evaluateur.DoesNotExist:
+            # Créer un nouvel évaluateur
+            service = determine_service_from_groups(list(user_groups))
+            if service:
+                evaluateur = Evaluateur.objects.create(
+                    user=user,
+                    nom=user.last_name or 'Nom',
+                    prenom=user.first_name or 'Prénom', 
+                    service=service
+                )
+                print(f"Évaluateur créé automatiquement pour {user.username} dans le service {service.nom}")
+
+
+def update_evaluateur_status(user):
+    """
+    Met à jour le statut de l'évaluateur quand l'utilisateur change de groupes
+    """
+    from suivi_conducteurs.models import Evaluateur
+    
+    # Vérifier si l'utilisateur a encore des groupes évaluateurs
+    groupes_evaluateurs = ['RH', 'Exploitation']
+    user_groups = user.groups.filter(name__in=groupes_evaluateurs).values_list('name', flat=True)
+    
+    try:
+        evaluateur = Evaluateur.objects.get(user=user)
+        
+        if not user_groups:
+            # Plus aucun groupe évaluateur - vous pouvez choisir de :
+            # Option 1 : Supprimer l'évaluateur
+            # evaluateur.delete()
+            # print(f"Évaluateur supprimé pour {user.username} (plus dans RH/Exploitation)")
+            
+            # Option 2 : Désactiver (si vous ajoutez un champ 'actif' au modèle Evaluateur)
+            # evaluateur.actif = False
+            # evaluateur.save()
+            
+            # Option 3 : Ne rien faire (garder l'évaluateur)
+            print(f"Utilisateur {user.username} retiré des groupes évaluateurs mais évaluateur conservé")
+        else:
+            # Mettre à jour le service selon les nouveaux groupes
+            nouveau_service = determine_service_from_groups(list(user_groups))
+            if nouveau_service and evaluateur.service != nouveau_service:
+                evaluateur.service = nouveau_service
+                evaluateur.save()
+                print(f"Service de l'évaluateur {user.username} mis à jour : {nouveau_service.nom}")
+    
+    except Evaluateur.DoesNotExist:
+        # Pas d'évaluateur existant, en créer un si nécessaire
+        if user_groups:
+            create_evaluateur_if_needed(user)
+
+
+# def determine_service_from_groups(group_names):
+#     """
+#     Détermine le service selon les groupes de l'utilisateur
+#     Priorité : RH > Exploitation
+#     """
+#     from suivi_conducteurs.models import Service
+    
+#     try:
+#         if 'RH' in group_names:
+#             return Service.objects.get(nom='Ressources Humaines')
+#         elif 'Exploitation' in group_names:
+#             return Service.objects.get(nom='Exploitation')
+#     except Service.DoesNotExist:
+#         print(f"Service non trouvé pour les groupes : {group_names}")
+#         return None
+    
+#     return None
+
+# Remplacez cette fonction dans votre signals.py
+
+def determine_service_from_groups(group_names):
+    """
+    Détermine le service selon les groupes de l'utilisateur
+    Priorité : RH > Exploitation
+    """
+    from suivi_conducteurs.models import Service
+    
+    try:
+        if 'RH' in group_names:
+            # Créer le service s'il n'existe pas
+            service, created = Service.objects.get_or_create(
+                nom='Ressources Humaines',
+                defaults={'abreviation': 'RH'}
+            )
+            if created:
+                print(f"✅ Service 'Ressources Humaines' créé automatiquement")
+            return service
+            
+        elif 'Exploitation' in group_names:
+            # Créer le service s'il n'existe pas
+            service, created = Service.objects.get_or_create(
+                nom='Exploitation',
+                defaults={'abreviation': 'EXP'}
+            )
+            if created:
+                print(f"✅ Service 'Exploitation' créé automatiquement")
+            return service
+            
+    except Exception as e:
+        print(f"❌ Erreur lors de la création/récupération du service : {e}")
+        return None
+    
+    return None
 
 @receiver(m2m_changed, sender=Group.permissions.through)
 def track_group_permission_changes(sender, instance, action, pk_set, **kwargs):

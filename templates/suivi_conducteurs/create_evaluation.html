@@ -18,7 +18,7 @@
 {% block content %}
 <div class="row">
 	<div class="col-md-12">
-		<h1 class="mb-4">
+		<h1 class="mb-4 text-primary">
 			<i class="fas fa-clipboard-check text-primary"></i>
 			Créer une évaluation
 		</h1>
@@ -59,9 +59,9 @@
 										{{ evaluateur.nom_complet }} - {{ evaluateur.service.nom }}
 										{% if evaluateur.user %}
 										{% with groups=evaluateur.user.groups.all %}
-									  {% if groups %}
-									  ({{ groups|join:", " }})
-									  {% endif %}
+										{% if groups %}
+										({{ groups|join:", " }})
+										{% endif %}
 										{% endwith %}
 										{% endif %}
 									</option>
@@ -145,8 +145,8 @@
 						<a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-secondary">
 							<i class="fas fa-arrow-left"></i> Retour à la liste
 						</a>
-						<button type="submit" id="submit-btn" class="btn btn-primary submit-btn"
-							disabled {% if not evaluateurs %} style="display: none;" {% endif %}>
+						<button type="submit" id="submit-btn" class="btn btn-primary submit-btn" disabled {% if not
+							evaluateurs %} style="display: none;" {% endif %}>
 							<span class="normal-content">
 								<i class="fas fa-save"></i> Créer l'évaluation
 							</span>
@@ -203,6 +203,35 @@
 
 {% block init_scripts %}
 <script>
+
+	document.addEventListener('DOMContentLoaded', function () {
+		const evaluateurSelect = document.getElementById('evaluateur');
+
+		console.log('🔍 DEBUG: Options des évaluateurs:');
+		Array.from(evaluateurSelect.options).forEach((option, index) => {
+			if (option.value) {
+				console.log(`Option ${index}:`, {
+					value: option.value,
+					text: option.textContent,
+					'data-groups': option.dataset.groups,
+					'data-groups (raw)': option.getAttribute('data-groups')
+				});
+			}
+		});
+
+		// Test de la validation
+		evaluateurSelect.addEventListener('change', function (e) {
+			const selectedOption = e.target.options[e.target.selectedIndex];
+			if (selectedOption && selectedOption.value) {
+				console.log('🔍 DEBUG: Option sélectionnée:', {
+					value: selectedOption.value,
+					text: selectedOption.textContent,
+					'data-groups': selectedOption.dataset.groups,
+					'groups array': (selectedOption.dataset.groups || '').split(',').map(g => g.trim())
+				});
+			}
+		});
+	});
 	// Gestion de la validation progressive
 	let validFields = new Set();
 	let requiredFields = new Set();
@@ -363,5 +392,42 @@
 	});
 
 	checkFormValidity();
+
+	document.addEventListener('DOMContentLoaded', function () {
+		console.log('🔍 DEBUG: Diagnostic des évaluateurs');
+
+		const evaluateurSelect = document.getElementById('evaluateur');
+
+		console.log('📋 OPTIONS DES ÉVALUATEURS:');
+		Array.from(evaluateurSelect.options).forEach((option, index) => {
+			if (option.value) {
+				console.log(`Option ${index}:`, {
+					value: option.value,
+					text: option.textContent.trim(),
+					'data-groups': option.dataset.groups,
+					'data-groups (getAttribute)': option.getAttribute('data-groups')
+				});
+			}
+		});
+
+		// Test de la validation en direct
+		evaluateurSelect.addEventListener('change', function (e) {
+			console.log('🔍 DEBUG: Changement d\'évaluateur');
+			const selectedOption = e.target.options[e.target.selectedIndex];
+			if (selectedOption && selectedOption.value) {
+				const groups = selectedOption.dataset.groups || '';
+				const validGroups = ['RH', 'Exploitation'];
+				const evaluatorGroups = groups.split(',').map(g => g.trim());
+
+				console.log('DEBUG: Validation évaluateur:', {
+					'Option sélectionnée': selectedOption.textContent.trim(),
+					'data-groups brut': groups,
+					'Groupes parsés': evaluatorGroups,
+					'Groupes valides attendus': validGroups,
+					'A un groupe valide': evaluatorGroups.some(group => validGroups.includes(group))
+				});
+			}
+		});
+	});
 </script>
 {% endblock %}

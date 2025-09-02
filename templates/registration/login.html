@@ -1,7 +1,3 @@
-<!-- ============================================
-     EXEMPLE 3: Page de connexion refactorisée
-     templates/registration/login.html
-     ============================================ -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -20,9 +16,8 @@
 			<div class="col-md-6 col-lg-5">
 				<div class="card login-card animate-bounce-in">
 					<div class="login-header text-center">
-						<!-- <i class="fas fa-truck fa-3x mb-3"></i> -->
 						<h2 class="mb-2">Suivi des Conducteurs</h2>
-						<p class="mb-0 opacity-75">Connectez-vous à votre compte</p>
+						<p class="mb-0 opacity-75">Connectez-vous</p>
 					</div>
 
 					<div class="login-form-body">
@@ -71,16 +66,6 @@
 								{% endif %}
 							</div>
 
-							<!-- Option "Se souvenir de moi" -->
-							<div class="mb-4">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="remember_me" name="remember_me">
-									<label class="form-check-label" for="remember_me">
-										Se souvenir de mon nom d'utilisateur
-									</label>
-								</div>
-							</div>
-
 							<div class="d-grid">
 								<button type="submit" class="btn btn-login">
 									<i class="fas fa-sign-in-alt me-2"></i>
@@ -110,10 +95,9 @@
 					</div>
 				</div>
 
-				<!-- Footer de la page de connexion -->
 				<div class="text-center mt-3">
 					<p class="text-white small opacity-75">
-						© {% now "Y" %} Système de Suivi des Conducteurs
+						 {% now "l j F Y" %}
 
 					</p>
 				</div>

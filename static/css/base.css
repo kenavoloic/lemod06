@@ -543,15 +543,29 @@ main {
     padding: var(--spacing-xxl);
 }
 
+/* .login-form-body .form-control {
+   padding: var(--spacing-xxl);
+   color: #000000 !important;
+   }
+ */
+.login-form-body .form-control,
+.login-form-body .form-control:focus,
+.login-form-body .form-control.is-valid,
+.login-form-body .form-control.is-invalid {
+  color: #000 !important;
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+}
+
 .btn-login {
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-md);
-    font-weight: var(--font-weight-semibold);
-    transition: var(--transition-normal);
-    color: white;
-    width: 100%;
+  background: var(--gradient-primary);
+  border: none;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition-normal);
+  color: white;
+  width: 100%;
 }
 
 .btn-login:hover {
