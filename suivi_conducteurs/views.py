@@ -324,3 +324,469 @@ def evaluation_list(request):
         'selected_type_id': type_filter_id,
     }
     return render(request, 'suivi_conducteurs/evaluation_list.html', context)
+
+# suivi_conducteurs/views.py - Ajout des vues pour les conducteurs
+
+# Ajouter ces vues à votre fichier views.py existant
+
+@login_required
+@permission_required('suivi_conducteurs.view_conducteur', raise_exception=True)
+def conducteur_list(request):
+    """Liste des conducteurs avec filtres"""
+    # Récupération des paramètres de filtre
+    search = request.GET.get('search', '')
+    societe_filter = request.GET.get('societe', '')
+    site_filter = request.GET.get('site', '')
+    statut_filter = request.GET.get('statut', '')
+    
+    # Requête de base avec les relations nécessaires
+    conducteurs = Conducteur.objects.select_related(
+        'salsocid', 'site'
+    ).prefetch_related(
+        'evaluation_set__notes__critere'
+    ).order_by('salnom', 'salnom2')
+    
+    # Application des filtres
+    if search:
+        from django.db.models import Q
+        conducteurs = conducteurs.filter(
+            Q(salnom__icontains=search) |
+            Q(salnom2__icontains=search) |
+            Q(salsocid__socnom__icontains=search)
+        )
+    
+    if societe_filter:
+        try:
+            societe_id = int(societe_filter)
+            conducteurs = conducteurs.filter(salsocid__socid=societe_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if site_filter:
+        try:
+            site_id = int(site_filter)
+            conducteurs = conducteurs.filter(site__id=site_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if statut_filter == 'actif':
+        conducteurs = conducteurs.filter(salactif=True)
+    elif statut_filter == 'inactif':
+        conducteurs = conducteurs.filter(salactif=False)
+    elif statut_filter == 'interim':
+        conducteurs = conducteurs.filter(interim_p=True)
+    elif statut_filter == 'sous_traitant':
+        conducteurs = conducteurs.filter(sous_traitant_p=True)
+    
+    # Ajouter des statistiques pour chaque conducteur
+    conducteurs_with_stats = []
+    for conducteur in conducteurs:
+        # Dernière évaluation
+        derniere_eval = conducteur.evaluation_set.order_by('-date_evaluation').first()
+        
+        # Score de la dernière évaluation
+        dernier_score = None
+        if derniere_eval:
+            dernier_score = derniere_eval.calculate_score()
+        
+        # Nombre total d'évaluations
+        nb_evaluations = conducteur.evaluation_set.count()
+        
+        conducteurs_with_stats.append({
+            'conducteur': conducteur,
+            'derniere_evaluation': derniere_eval,
+            'dernier_score': dernier_score,
+            'nb_evaluations': nb_evaluations,
+        })
+    
+    # Données pour les filtres
+    societes = Societe.objects.filter(socactif=True).order_by('socnom')
+    sites = Site.objects.all().order_by('nom_commune')
+    
+    context = {
+        'conducteurs_with_stats': conducteurs_with_stats,
+        'societes': societes,
+        'sites': sites,
+        'search': search,
+        'societe_filter': societe_filter,
+        'site_filter': site_filter,
+        'statut_filter': statut_filter,
+        'total_count': len(conducteurs_with_stats),
+    }
+    return render(request, 'suivi_conducteurs/conducteur_list.html', context)
+
+
+@login_required
+@permission_required('suivi_conducteurs.view_conducteur', raise_exception=True)
+def conducteur_detail(request, pk):
+    """Détail d'un conducteur avec ses évaluations"""
+    conducteur = get_object_or_404(
+        Conducteur.objects.select_related('salsocid', 'site'),
+        pk=pk
+    )
+    
+    # Évaluations du conducteur
+    evaluations = conducteur.evaluation_set.select_related(
+        'evaluateur', 'type_evaluation'
+    ).prefetch_related('notes__critere').order_by('-date_evaluation')
+    
+    # Ajouter le score pour chaque évaluation
+    evaluations_with_scores = []
+    for evaluation in evaluations:
+        score = evaluation.calculate_score()
+        evaluations_with_scores.append({
+            'evaluation': evaluation,
+            'score': score
+        })
+    
+    # Statistiques du conducteur
+    stats = {
+        'nb_evaluations': evaluations.count(),
+        'derniere_evaluation': evaluations.first(),
+        'moyenne_scores': None,
+        'evaluations_par_type': {},
+    }
+    
+    # Calcul de la moyenne des scores
+    scores = [item['score'] for item in evaluations_with_scores if item['score'] is not None]
+    if scores:
+        stats['moyenne_scores'] = sum(scores) / len(scores)
+    
+    # Évaluations par type
+    from collections import defaultdict
+    evals_par_type = defaultdict(list)
+    for item in evaluations_with_scores:
+        type_nom = item['evaluation'].type_evaluation.nom
+        evals_par_type[type_nom].append(item)
+    stats['evaluations_par_type'] = dict(evals_par_type)
+    
+    context = {
+        'conducteur': conducteur,
+        'evaluations_with_scores': evaluations_with_scores,
+        'stats': stats,
+    }
+    return render(request, 'suivi_conducteurs/conducteur_detail.html', context)
+
+
+@login_required
+@permission_required('suivi_conducteurs.view_societe', raise_exception=True)
+def societe_list(request):
+    """Liste des sociétés"""
+    search = request.GET.get('search', '')
+    statut_filter = request.GET.get('statut', '')
+    
+    societes = Societe.objects.all().order_by('socnom')
+    
+    if search:
+        from django.db.models import Q
+        societes = societes.filter(
+            Q(socnom__icontains=search) |
+            Q(soccode__icontains=search) |
+            Q(socvillib1__icontains=search)
+        )
+    
+    if statut_filter == 'actif':
+        societes = societes.filter(socactif=True)
+    elif statut_filter == 'inactif':
+        societes = societes.filter(socactif=False)
+    
+    # Ajouter le nombre de conducteurs par société
+    societes_with_stats = []
+    for societe in societes:
+        nb_conducteurs = Conducteur.objects.filter(salsocid=societe).count()
+        nb_conducteurs_actifs = Conducteur.objects.filter(salsocid=societe, salactif=True).count()
+        
+        societes_with_stats.append({
+            'societe': societe,
+            'nb_conducteurs': nb_conducteurs,
+            'nb_conducteurs_actifs': nb_conducteurs_actifs,
+        })
+    
+    context = {
+        'societes_with_stats': societes_with_stats,
+        'search': search,
+        'statut_filter': statut_filter,
+        'total_count': len(societes_with_stats),
+    }
+    return render(request, 'suivi_conducteurs/societe_list.html', context)
+
+
+# @login_required
+# @permission_required('suivi_conducteurs.view_site', raise_exception=True)
+# def site_list(request):
+#     """Liste des sites"""
+#     search = request.GET.get('search', '')
+    
+#     sites = Site.objects.all().order_by('nom_commune')
+    
+#     if search:
+#         from django.db.models import Q
+#         sites = sites.filter(
+#             Q(nom_commune__icontains=search) |
+#             Q(code_postal__icontains=search)
+#         )
+    
+#     # Ajouter le nombre de conducteurs par site
+#     sites_with_stats = []
+#     for site in sites:
+#         nb_conducteurs = Conducteur.objects.filter(site=site).count()
+#         nb_conducteurs_actifs = Conducteur.objects.filter(site=site, salactif=True).count()
+        
+#         sites_with_stats.append({
+#             'site': site,
+#             'nb_conducteurs': nb_conducteurs,
+#             'nb_conducteurs_actifs': nb_conducteurs_actifs,
+#         })
+    
+#     context = {
+#         'sites_with_stats': sites_with_stats,
+#         'search': search,
+#         'total_count': len(sites_with_stats),
+#     }
+#     return render(request, 'suivi_conducteurs/site_list.html', context)
+
+@login_required
+@permission_required('suivi_conducteurs.view_site', raise_exception=True) 
+def site_list(request):
+    """Version optimisée de la liste des sites avec annotations"""
+    
+    # Récupérer les filtres
+    search = request.GET.get('search', '').strip()
+    code_postal_filter = request.GET.get('code_postal', '').strip()
+    
+    # Requête de base avec annotations pour les statistiques
+    sites_query = Site.objects.annotate(
+        nb_conducteurs=Count('conducteur', distinct=True),
+        nb_conducteurs_actifs=Count(
+            'conducteur', 
+            filter=Q(conducteur__salactif=True),
+            distinct=True
+        ),
+        nb_permanents=Count(
+            'conducteur',
+            filter=Q(
+                conducteur__salactif=True,
+                conducteur__interim_p=False,
+                conducteur__sous_traitant_p=False
+            ),
+            distinct=True
+        ),
+        nb_interims=Count(
+            'conducteur',
+            filter=Q(
+                conducteur__salactif=True,
+                conducteur__interim_p=True
+            ),
+            distinct=True
+        ),
+        nb_sous_traitants=Count(
+            'conducteur',
+            filter=Q(
+                conducteur__salactif=True,
+                conducteur__sous_traitant_p=True
+            ),
+            distinct=True
+        ),
+        nb_societes=Count(
+            'conducteur__salsocid',
+            filter=Q(conducteur__salsocid__socactif=True),
+            distinct=True
+        )
+    ).order_by('nom_commune')
+    
+    # Appliquer les filtres
+    if search:
+        sites_query = sites_query.filter(
+            Q(nom_commune__icontains=search) | 
+            Q(code_postal__icontains=search)
+        )
+    
+    if code_postal_filter:
+        sites_query = sites_query.filter(code_postal=code_postal_filter)
+    
+    # Récupérer les sites avec leurs statistiques
+    sites_with_annotations = sites_query.prefetch_related(
+        'conducteur_set__salsocid'
+    )
+    
+    # Enrichir avec les listes de sociétés
+    sites_with_stats = []
+    for site in sites_with_annotations:
+        # Récupérer les sociétés distinctes pour ce site
+        societes_sur_site = Societe.objects.filter(
+            conducteur__site=site,
+            socactif=True
+        ).distinct().order_by('socnom')[:10]
+        
+        sites_with_stats.append({
+            'site': site,
+            'nb_conducteurs': site.nb_conducteurs,
+            'nb_conducteurs_actifs': site.nb_conducteurs_actifs,
+            'nb_permanents': site.nb_permanents,
+            'nb_interims': site.nb_interims,
+            'nb_sous_traitants': site.nb_sous_traitants,
+            'nb_societes': site.nb_societes,
+            'societes_list': list(societes_sur_site)
+        })
+    
+    # Codes postaux pour le filtre
+    codes_postaux_disponibles = Site.objects.values_list(
+        'code_postal', flat=True
+    ).distinct().order_by('code_postal')
+    
+    context = {
+        'sites_with_stats': sites_with_stats,
+        'total_count': len(sites_with_stats),
+        'codes_postaux_disponibles': codes_postaux_disponibles,
+        'search': search,
+        'code_postal_filter': code_postal_filter,
+    }
+    
+    return render(request, 'suivi_conducteurs/site_list.html', context)
+
+def statistiques_view(request):
+    """Vue des statistiques globales"""
+    # Statistiques de base
+    stats = {
+        'total_conducteurs': Conducteur.objects.filter(salactif=True).count(),
+        'total_evaluations': Evaluation.objects.count(),
+        'total_societes': Societe.objects.filter(socactif=True).count(),
+        'total_sites': Site.objects.count(),
+    }
+    
+    # Statistiques des conducteurs par catégorie
+    conducteurs_stats = {
+        'total_actifs': Conducteur.objects.filter(salactif=True).count(),
+        'total_inactifs': Conducteur.objects.filter(salactif=False).count(),
+        'interim': Conducteur.objects.filter(salactif=True, interim_p=True).count(),
+        'sous_traitants': Conducteur.objects.filter(salactif=True, sous_traitant_p=True).count(),
+        'permanents': Conducteur.objects.filter(salactif=True, interim_p=False, sous_traitant_p=False).count(),
+    }
+    
+    # Conducteurs par site
+    conducteurs_par_site = []
+    for site in Site.objects.all():
+        count_actifs = Conducteur.objects.filter(site=site, salactif=True).count()
+        count_total = Conducteur.objects.filter(site=site).count()
+        if count_total > 0:
+            conducteurs_par_site.append({
+                'site': site,
+                'actifs': count_actifs,
+                'total': count_total,
+                'inactifs': count_total - count_actifs
+            })
+    
+    # Conducteurs par société
+    conducteurs_par_societe = []
+    for societe in Societe.objects.filter(socactif=True):
+        count_actifs = Conducteur.objects.filter(salsocid=societe, salactif=True).count()
+        count_total = Conducteur.objects.filter(salsocid=societe).count()
+        count_interim = Conducteur.objects.filter(salsocid=societe, salactif=True, interim_p=True).count()
+        count_sous_traitants = Conducteur.objects.filter(salsocid=societe, salactif=True, sous_traitant_p=True).count()
+        if count_total > 0:
+            conducteurs_par_societe.append({
+                'societe': societe,
+                'actifs': count_actifs,
+                'total': count_total,
+                'inactifs': count_total - count_actifs,
+                'interim': count_interim,
+                'sous_traitants': count_sous_traitants,
+                'permanents': count_actifs - count_interim - count_sous_traitants
+            })
+    
+    # Évaluations par mois (derniers 12 mois)
+    from datetime import date, timedelta
+    from django.db.models import Count
+    from django.db.models.functions import TruncMonth
+    
+    fin_periode = date.today()
+    debut_periode = fin_periode - timedelta(days=365)
+    
+    evaluations_par_mois = Evaluation.objects.filter(
+        date_evaluation__gte=debut_periode
+    ).annotate(
+        mois=TruncMonth('date_evaluation')
+    ).values('mois').annotate(
+        count=Count('id')
+    ).order_by('mois')
+    
+    # Scores moyens par type d'évaluation
+    scores_par_type = {}
+    for type_eval in TypologieEvaluation.objects.all():
+        evaluations = Evaluation.objects.filter(type_evaluation=type_eval)
+        scores = []
+        for eval in evaluations:
+            score = eval.calculate_score()
+            if score is not None:
+                scores.append(score)
+        
+        if scores:
+            scores_par_type[type_eval.nom] = {
+                'moyenne': sum(scores) / len(scores),
+                'count': len(scores),
+                'total_evaluations': evaluations.count()
+            }
+    
+    context = {
+        'stats': stats,
+        'conducteurs_stats': conducteurs_stats,
+        'conducteurs_par_site': conducteurs_par_site,
+        'conducteurs_par_societe': conducteurs_par_societe,
+        'evaluations_par_mois': list(evaluations_par_mois),
+        'scores_par_type': scores_par_type,
+    }
+    return render(request, 'suivi_conducteurs/statistiques.html', context)
+
+# Vue pour les statistiques (placeholder)
+# @login_required
+# @permission_required('suivi_conducteurs.view_evaluation', raise_exception=True)
+# def statistiques_view(request):
+#     """Vue des statistiques globales"""
+#     # Statistiques de base
+#     stats = {
+#         'total_conducteurs': Conducteur.objects.filter(salactif=True).count(),
+#         'total_evaluations': Evaluation.objects.count(),
+#         'total_societes': Societe.objects.filter(socactif=True).count(),
+#         'total_sites': Site.objects.count(),
+#     }
+    
+#     # Évaluations par mois (derniers 12 mois)
+#     from datetime import date, timedelta
+#     from django.db.models import Count
+#     from django.db.models.functions import TruncMonth
+    
+#     fin_periode = date.today()
+#     debut_periode = fin_periode - timedelta(days=365)
+    
+#     evaluations_par_mois = Evaluation.objects.filter(
+#         date_evaluation__gte=debut_periode
+#     ).annotate(
+#         mois=TruncMonth('date_evaluation')
+#     ).values('mois').annotate(
+#         count=Count('id')
+#     ).order_by('mois')
+    
+#     # Scores moyens par type d'évaluation
+#     from django.db.models import Avg
+#     scores_par_type = {}
+#     for type_eval in TypologieEvaluation.objects.all():
+#         evaluations = Evaluation.objects.filter(type_evaluation=type_eval)
+#         scores = []
+#         for eval in evaluations:
+#             score = eval.calculate_score()
+#             if score is not None:
+#                 scores.append(score)
+        
+#         if scores:
+#             scores_par_type[type_eval.nom] = {
+#                 'moyenne': sum(scores) / len(scores),
+#                 'count': len(scores),
+#                 'total_evaluations': evaluations.count()
+#             }
+    
+#     context = {
+#         'stats': stats,
+#         'evaluations_par_mois': list(evaluations_par_mois),
+#         'scores_par_type': scores_par_type,
+#     }
+#     return render(request, 'suivi_conducteurs/statistiques.html', context)

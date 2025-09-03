@@ -16,8 +16,21 @@ urlpatterns = [
     # Évaluations
     path('evaluations/', views.evaluation_list, name='evaluation_list'),
     path('evaluations/create/', views.create_evaluation, name='create_evaluation'),
-    path('evaluations/submit/', views.submit_evaluation, name='submit_evaluation'),  # Ajouté cette ligne
+    path('evaluations/submit/', views.submit_evaluation, name='submit_evaluation'),
     path('evaluations/<int:pk>/', views.evaluation_detail, name='evaluation_detail'),
+
+    # Conducteurs - NOUVELLES ROUTES
+    path('conducteurs/', views.conducteur_list, name='conducteur_list'),
+    path('conducteurs/<int:pk>/', views.conducteur_detail, name='conducteur_detail'),
+    
+    # Sociétés - NOUVELLES ROUTES
+    path('societes/', views.societe_list, name='societe_list'),
+    
+    # Sites - NOUVELLES ROUTES  
+    path('sites/', views.site_list, name='site_list'),
+    
+    # Statistiques - NOUVELLE ROUTE
+    path('statistiques/', views.statistiques_view, name='statistiques'),
     
     # HTMX endpoints
     path('evaluations/load-criteres/', views.load_criteres_htmx, name='load_criteres_htmx'),

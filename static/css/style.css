@@ -281,7 +281,7 @@ main {
 }
 
 .card-body {
-    padding: var(--spacing-lg);
+  padding: var(--spacing-lg);
 }
 
 /* Cartes de statistiques */

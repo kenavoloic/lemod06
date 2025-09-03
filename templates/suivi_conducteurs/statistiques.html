@@ -1,0 +1,392 @@
+<!-- templates/suivi_conducteurs/statistiques.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Statistiques - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+	.stats-card {
+		border: none;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		border-radius: 8px;
+	}
+
+	.stats-number {
+		font-size: 2.5rem;
+		font-weight: 700;
+		margin: 0;
+	}
+
+	.score-bar {
+		height: 8px;
+		background-color: #e9ecef;
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.score-fill {
+		height: 100%;
+		border-radius: 4px;
+	}
+
+	.table-stats {
+		font-size: 0.9rem;
+	}
+
+	.simple-chart {
+		max-height: 300px;
+		overflow-y: auto;
+	}
+
+	.chart-bar {
+		display: flex;
+		align-items: center;
+		margin-bottom: 0.5rem;
+		padding: 0.5rem;
+		background: #f8f9fa;
+		border-radius: 4px;
+	}
+
+	.chart-label {
+		min-width: 100px;
+		font-weight: 500;
+	}
+
+	.chart-value {
+		margin-left: auto;
+		font-weight: 600;
+	}
+
+	.chart-progress {
+		flex: 1;
+		height: 20px;
+		background: #e9ecef;
+		border-radius: 10px;
+		margin: 0 1rem;
+		position: relative;
+	}
+
+	.chart-progress-bar {
+		height: 100%;
+		border-radius: 10px;
+	}
+</style>
+{% endblock %}
+
+{% block main_class %}container-fluid mt-4{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="row mb-4">
+	<div class="col-md-8">
+		<h1 class="display-6 text-primary">
+			<i class="fas fa-chart-bar text-primary"></i>
+			Statistiques
+		</h1>
+		<p class="text-muted">Vue d'ensemble des évaluations et performances</p>
+	</div>
+	<div class="col-md-4 text-end">
+		<a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-outline-primary">
+			<i class="fas fa-list"></i> Voir toutes les évaluations
+		</a>
+	</div>
+</div>
+
+<!-- Statistiques principales -->
+<div class="row mb-4">
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="card stats-card text-center">
+			<div class="card-body">
+				<i class="fas fa-users fa-2x text-primary mb-2"></i>
+				<div class="stats-number text-primary">{{ stats.total_conducteurs }}</div>
+				<p class="text-muted mb-0">Conducteurs actifs</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="card stats-card text-center">
+			<div class="card-body">
+				<i class="fas fa-clipboard-check fa-2x text-success mb-2"></i>
+				<div class="stats-number text-success">{{ stats.total_evaluations }}</div>
+				<p class="text-muted mb-0">Évaluations totales</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="card stats-card text-center">
+			<div class="card-body">
+				<i class="fas fa-building fa-2x text-info mb-2"></i>
+				<div class="stats-number text-info">{{ stats.total_societes }}</div>
+				<p class="text-muted mb-0">Sociétés actives</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="card stats-card text-center">
+			<div class="card-body">
+				<i class="fas fa-map-marker-alt fa-2x text-warning mb-2"></i>
+				<div class="stats-number text-warning">{{ stats.total_sites }}</div>
+				<p class="text-muted mb-0">Sites</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Performances par type d'évaluation -->
+{% if scores_par_type %}
+<div class="row mb-4">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header bg-primary text-white">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-star me-2"></i>
+					Scores moyens par type d'évaluation
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					{% for type_nom, data in scores_par_type.items %}
+					<div class="col-lg-4 col-md-6 mb-4">
+						<div class="card border-0 bg-light">
+							<div class="card-body">
+								<h6 class="card-title">{{ type_nom }}</h6>
+
+								<!-- Score principal -->
+								<div class="text-center mb-3">
+									<span class="badge fs-4 
+                                        {% if data.moyenne >= 80 %}bg-success
+                                        {% elif data.moyenne >= 65 %}bg-info
+                                        {% elif data.moyenne >= 50 %}bg-warning text-dark
+                                        {% else %}bg-danger{% endif %}">
+										{{ data.moyenne|floatformat:1 }}%
+									</span>
+								</div>
+
+								<!-- Barre de progression -->
+								<div class="score-bar mb-3">
+									<div class="score-fill 
+                                        {% if data.moyenne >= 80 %}bg-success
+                                        {% elif data.moyenne >= 65 %}bg-info
+                                        {% elif data.moyenne >= 50 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" style="width: {{ data.moyenne }}%"></div>
+								</div>
+
+								<!-- Détails -->
+								<div class="row text-center">
+									<div class="col-6">
+										<strong class="text-primary">{{ data.count }}</strong>
+										<br><small class="text-muted">Notées</small>
+									</div>
+									<div class="col-6">
+										<strong class="text-info">{{ data.total_evaluations }}</strong>
+										<br><small class="text-muted">Total</small>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endif %}
+
+<!-- Évolution mensuelle -->
+{% if evaluations_par_mois %}
+<div class="row mb-4">
+	<div class="col-lg-8">
+		<div class="card">
+			<div class="card-header bg-info text-white">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-chart-line me-2"></i>
+					Évaluations par mois (12 derniers mois)
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="simple-chart">
+					{% for item in evaluations_par_mois %}
+					<div class="chart-bar">
+						<div class="chart-label">
+							{{ item.mois|date:"M Y" }}
+						</div>
+						<div class="chart-progress">
+							<div class="chart-progress-bar bg-info"
+								style="width: {% if item.count > 0 %}{% if item.count > 20 %}100{% else %}{% widthratio item.count 20 100 %}{% endif %}{% else %}5{% endif %}%">
+							</div>
+						</div>
+						<div class="chart-value text-info">
+							{{ item.count }}
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-4">
+		<div class="card">
+			<div class="card-header bg-secondary text-white">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-info-circle me-2"></i>
+					Résumé mensuel
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="mb-3">
+					<h6 class="text-primary">Période analysée</h6>
+					<p class="mb-1">{{ evaluations_par_mois|length }} mois</p>
+					<small class="text-muted">
+						Dernière période disponible
+					</small>
+				</div>
+
+				<div class="mb-3">
+					<h6 class="text-success">Évaluations par mois</h6>
+					<div class="small">
+						{% for item in evaluations_par_mois %}
+						{% if item.count > 0 %}
+						<div class="d-flex justify-content-between mb-1">
+							<span>{{ item.mois|date:"M Y" }}</span>
+							<span class="badge bg-info">{{ item.count }}</span>
+						</div>
+						{% endif %}
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endif %}
+
+<!-- Tableau récapitulatif -->
+<div class="row">
+	<div class="col-12">
+		<div class="card">
+			<div class="card-header bg-light">
+				<h5 class="card-title mb-0">
+					<i class="fas fa-table me-2"></i>
+					Récapitulatif détaillé
+				</h5>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover table-stats">
+						<thead class="table-light">
+							<tr>
+								<th>Indicateur</th>
+								<th class="text-center">Valeur</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><i class="fas fa-users text-primary me-2"></i>Conducteurs actifs</td>
+								<td class="text-center"><span class="badge bg-primary">{{ stats.total_conducteurs }}</span></td>
+								<td class="text-muted">Conducteurs actuellement en service</td>
+							</tr>
+							<tr>
+								<td><i class="fas fa-clock text-warning me-2"></i>Conducteurs intérim</td>
+								<td class="text-center"><span class="badge bg-warning text-dark">{{ conducteurs_stats.interim }}</span></td>
+								<td class="text-muted">Conducteurs en mission temporaire</td>
+							</tr>
+							<tr>
+								<td><i class="fas fa-handshake text-info me-2"></i>Sous-traitants</td>
+								<td class="text-center"><span class="badge bg-info">{{ conducteurs_stats.sous_traitants }}</span></td>
+								<td class="text-muted">Conducteurs sous-traitants actifs</td>
+							</tr>
+							<tr>
+								<td><i class="fas fa-user-check text-success me-2"></i>Permanents</td>
+								<td class="text-center"><span class="badge bg-success">{{ conducteurs_stats.permanents }}</span></td>
+								<td class="text-muted">Conducteurs permanents (ni intérim, ni sous-traitants)</td>
+							</tr>
+							<tr>
+								<td><i class="fas fa-clipboard-check text-success me-2"></i>Évaluations totales</td>
+								<td class="text-center"><span class="badge bg-success">{{ stats.total_evaluations }}</span></td>
+								<td class="text-muted">Toutes les évaluations enregistrées</td>
+							</tr>
+							<tr>
+								<td><i class="fas fa-building text-info me-2"></i>Sociétés actives</td>
+								<td class="text-center"><span class="badge bg-info">{{ stats.total_societes }}</span>
+								</td>
+								<td class="text-muted">Entreprises actuellement en activité</td>
+							</tr>
+							<tr>
+								<td><i class="fas fa-map-marker-alt text-warning me-2"></i>Sites de service</td>
+								<td class="text-center"><span class="badge bg-warning text-dark">{{ stats.total_sites }}</span></td>
+								<td class="text-muted">Zones géographiques couvertes</td>
+							</tr>
+							{% if conducteurs_par_site %}
+							<tr>
+								<td><i class="fas fa-map-pin text-secondary me-2"></i>Sites avec conducteurs</td>
+								<td class="text-center"><span class="badge bg-secondary">{{ conducteurs_par_site|length }}</span></td>
+								<td class="text-muted">Sites ayant au moins un conducteur</td>
+							</tr>
+							{% endif %}
+							{% if conducteurs_par_societe %}
+							<tr>
+								<td><i class="fas fa-industry text-primary me-2"></i>Sociétés avec conducteurs</td>
+								<td class="text-center"><span class="badge bg-primary">{{ conducteurs_par_societe|length }}</span></td>
+								<td class="text-muted">Sociétés ayant au moins un conducteur</td>
+							</tr>
+							{% endif %}
+							{% if scores_par_type %}
+							<tr>
+								<td><i class="fas fa-star text-warning me-2"></i>Types d'évaluation</td>
+								<td class="text-center"><span class="badge bg-secondary">{{ scores_par_type|length }}</span></td>
+								<td class="text-muted">Différents types d'évaluations disponibles</td>
+							</tr>
+							{% endif %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+	<div class="col-12">
+		<div class="card bg-light">
+			<div class="card-body">
+				<h6 class="card-title">Actions disponibles</h6>
+				<div class="btn-group" role="group">
+					<a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-primary">
+						<i class="fas fa-list me-1"></i>Toutes les évaluations
+					</a>
+					<a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success">
+						<i class="fas fa-plus me-1"></i>Nouvelle évaluation
+					</a>
+					<a href="{% url 'suivi_conducteurs:dashboard' %}" class="btn btn-secondary">
+						<i class="fas fa-home me-1"></i>Tableau de bord
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Message si pas de données -->
+{% if not scores_par_type and not evaluations_par_mois %}
+<div class="row mt-4">
+	<div class="col-12">
+		<div class="alert alert-info text-center">
+			<i class="fas fa-info-circle fa-2x mb-3"></i>
+			<h5>Pas encore de données détaillées</h5>
+			<p class="mb-3">Créez des évaluations pour voir apparaître les statistiques détaillées.</p>
+			<a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-primary">
+				<i class="fas fa-plus me-1"></i>Créer une évaluation
+			</a>
+		</div>
+	</div>
+</div>
+{% endif %}
+{% endblock %}

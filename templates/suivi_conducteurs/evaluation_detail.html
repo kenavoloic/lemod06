@@ -12,16 +12,16 @@
 
 {% block content %}
 <!-- Bouton d'impression -->
-<button onclick="window.print()" class="btn btn-outline-secondary print-btn no-print">
+<!-- <button onclick="window.print()" class="btn btn-outline-secondary print-btn no-print">
 	<i class="fas fa-print"></i> Imprimer
-</button>
+</button> -->
 
 <!-- En-tête -->
 <div class="row mb-4">
 	<div class="col-12">
-		<h1 class="display-6 mb-3">
+		<h1 class="display-6 mb-3 text-primary">
 			<i class="fas fa-clipboard-check text-primary"></i>
-			Évaluation {{ evaluation.type_evaluation.nom }}
+			{{ evaluation.type_evaluation.nom }}
 		</h1>
 	</div>
 </div>
@@ -88,7 +88,7 @@
 						{{ stats.score_percentage }}%
 					</span>
 					<p class="mb-2 mt-2"><strong>Score global</strong></p>
-					<p class="small text-muted mb-3">
+					<p class="small  mb-3">
 						Moyenne arithmétique : {{ stats.moyenne|floatformat:1 }}/10
 					</p>
 					{% else %}
@@ -96,18 +96,18 @@
 						<i class="fas fa-minus"></i>
 					</span>
 					<p class="mb-2 mt-2"><strong>Pas de score</strong></p>
-					<p class="small text-muted mb-3">Aucune note attribuée</p>
+					<p class="small  mb-3">Aucune note attribuée</p>
 					{% endif %}
 				</div>
 				<hr>
 				<div class="row text-center">
 					<div class="col-6">
 						<h5 class="text-primary">{{ stats.notes_attribuees }}</h5>
-						<small class="text-muted">Notes données</small>
+						<small class="text-primary">Notes données</small>
 					</div>
 					<div class="col-6">
 						<h5 class="text-info">{{ stats.total_criteres }}</h5>
-						<small class="text-muted">Critères total</small>
+						<small class="text-primary">Critères total</small>
 					</div>
 				</div>
 
@@ -199,9 +199,9 @@
 				<a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success">
 					<i class="fas fa-plus"></i> Nouvelle évaluation
 				</a>
-				<button onclick="window.print()" class="btn btn-outline-primary">
-					<i class="fas fa-print"></i> Imprimer
-				</button>
+				<!-- <button onclick="window.print()" class="btn btn-outline-primary">
+									<i class="fas fa-print"></i> Imprimer
+								</button> -->
 			</div>
 		</div>
 	</div>

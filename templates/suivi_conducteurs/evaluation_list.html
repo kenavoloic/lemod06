@@ -18,7 +18,7 @@
 			<i class="fas fa-list-alt text-primary"></i>
 			Évaluations des conducteurs
 		</h1>
-		<p class="text-muted">Gérez et consultez toutes les évaluations avec leurs scores</p>
+		<p class="text-primary">Gérez et consultez toutes les évaluations avec leurs scores</p>
 	</div>
 	<div class="col-md-4 text-end">
 		<a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success btn-lg">
@@ -160,10 +160,10 @@
 											class="btn btn-sm btn-outline-primary" title="Voir le détail">
 											<i class="fas fa-eye"></i>
 										</a>
-										<button class="btn btn-sm btn-outline-info" title="Imprimer"
-											onclick="printEvaluation('{% url 'suivi_conducteurs:evaluation_detail' item.evaluation.pk %}')">
-											<i class="fas fa-print"></i>
-										</button>
+										<!-- <button class="btn btn-sm btn-outline-info" title="Imprimer"
+																					onclick="printEvaluation('{% url 'suivi_conducteurs:evaluation_detail' item.evaluation.pk %}')">
+																					<i class="fas fa-print"></i>
+																				</button> -->
 									</div>
 								</td>
 							</tr>

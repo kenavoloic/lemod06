@@ -1,9 +1,8 @@
-<!-- includes/navbar.html - Composant navbar unifié -->
+<!-- templates/includes/navbar.html - Version corrigée avec vrais liens -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
     <div class="container-fluid">
         <!-- Brand -->
         <a class="navbar-brand" href="{% url 'suivi_conducteurs:dashboard' %}">
-			<!-- <i class="fas fa-truck me-2"></i> -->
             <span class="fw-bold">Suivi Conducteurs</span>
         </a>
 
@@ -50,7 +49,7 @@
                             <h6 class="dropdown-header">Rapports</h6>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" data-action="show-stats">
+                            <a class="dropdown-item" href="{% url 'suivi_conducteurs:statistiques' %}">
                                 <i class="fas fa-chart-bar me-2"></i>
                                 Statistiques
                             </a>
@@ -68,14 +67,14 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item" href="#" data-action="list-conducteurs">
+                            <a class="dropdown-item" href="{% url 'suivi_conducteurs:conducteur_list' %}">
                                 <i class="fas fa-list me-2"></i>
                                 Liste des conducteurs
                             </a>
                         </li>
                         {% if perms.suivi_conducteurs.add_conducteur %}
                         <li>
-                            <a class="dropdown-item" href="#" data-action="add-conducteur">
+                            <a class="dropdown-item" href="/admin/suivi_conducteurs/conducteur/add/">
                                 <i class="fas fa-user-plus me-2"></i>
                                 Nouveau conducteur
                             </a>
@@ -83,13 +82,13 @@
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="#" data-action="list-societes">
+                            <a class="dropdown-item" href="{% url 'suivi_conducteurs:societe_list' %}">
                                 <i class="fas fa-building me-2"></i>
                                 Sociétés
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" data-action="list-sites">
+                            <a class="dropdown-item" href="{% url 'suivi_conducteurs:site_list' %}">
                                 <i class="fas fa-map-marker-alt me-2"></i>
                                 Sites
                             </a>
@@ -168,7 +167,7 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item text-center" href="#" data-action="show-all-notifications">
+                            <a class="dropdown-item text-center" href="#" onclick="alert('Notifications - Fonctionnalité à développer')">
                                 Voir toutes les notifications
                             </a>
                         </li>
@@ -235,13 +234,7 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="#" data-action="toggle-theme">
-                                <i class="fas fa-palette me-2"></i>
-                                Changer le thème
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="#" data-action="show-preferences">
+                            <a class="dropdown-item" href="#" onclick="alert('Préférences - Fonctionnalité à développer')">
                                 <i class="fas fa-cog me-2"></i>
                                 Préférences
                             </a>

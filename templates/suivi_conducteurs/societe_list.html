@@ -1,0 +1,344 @@
+<!-- templates/suivi_conducteurs/societe_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des sociétés - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<!-- <link href="{% static 'css/dashboard.css' %}" rel="stylesheet"> -->
+<style>
+	.societe-card {
+		transition: all 0.3s ease;
+		border-left: 4px solid var(--bs-success);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.societe-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+	}
+
+	.societe-card.inactive {
+		border-left-color: var(--bs-secondary);
+		opacity: 0.8;
+	}
+
+	.societe-header {
+		background: linear-gradient(135deg, rgba(var(--bs-success-rgb), 0.1) 0%, rgba(var(--bs-success-rgb), 0.05) 100%);
+		border-radius: 10px;
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.conducteur-count {
+		font-size: 2rem;
+		font-weight: 700;
+		color: var(--bs-success);
+	}
+</style>
+{% endblock %}
+
+{% block main_class %}container-fluid mt-4{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="row mb-4">
+	<div class="col-md-8">
+		<h1 class="display-6 text-primary">
+			<i class="fas fa-building text-primary"></i>
+			Sociétés
+		</h1>
+		<p class="text-muted">Répartition des conducteurs par sociétés</p>
+	</div>
+	<div class="col-md-4 text-end">
+		{% if perms.suivi_conducteurs.add_societe %}
+		<a href="/admin/suivi_conducteurs/societe/add/" class="btn btn-success btn-lg">
+			<i class="fas fa-plus"></i> Nouvelle société
+		</a>
+		{% endif %}
+	</div>
+</div>
+
+<!-- Filtres -->
+<div class="row mb-4">
+	<div class="col-12">
+		<div class="card filter-card">
+			<div class="card-body">
+				<form method="get" class="row g-3">
+					<div class="col-md-6">
+						<label for="search" class="form-label">Recherche</label>
+						<input type="text" name="search" id="search" class="form-control" value="{{ search }}"
+							placeholder="Nom, code ou ville">
+					</div>
+
+					<div class="col-md-3">
+						<label for="statut" class="form-label">Statut</label>
+						<select name="statut" id="statut" class="form-select">
+							<option value="">Tous les statuts</option>
+							<option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actives seulement
+							</option>
+							<option value="inactif" {% if statut_filter == 'inactif' %}selected{% endif %}>Inactives
+								seulement</option>
+						</select>
+					</div>
+
+					<div class="col-md-3 d-flex align-items-end">
+						<button type="submit" class="btn btn-primary me-2">
+							<i class="fas fa-filter"></i> Filtrer
+						</button>
+						<a href="{% url 'suivi_conducteurs:societe_list' %}" class="btn btn-outline-secondary">
+							<i class="fas fa-times"></i> Effacer
+						</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+	<div class="col-md-12">
+		<div class="card">
+			<div class="card-body">
+				<div class="row text-center">
+					<div class="col-md-3">
+						<h4 class="text-primary mb-0">{{ total_count }}</h4>
+						<small class="text-muted">Société{{ total_count|pluralize }}</small>
+					</div>
+					<div class="col-md-3">
+						<h4 class="text-success mb-0">
+							{% with actives=societes_with_stats|length %}
+							{{ actives }}
+							{% endwith %}
+						</h4>
+						<small class="text-muted">Actives</small>
+					</div>
+					<div class="col-md-3">
+						{% with total_conducteurs=0 %}
+						{% for item in societes_with_stats %}
+					  {% with total_conducteurs=total_conducteurs|add:item.nb_conducteurs %}
+					  {% endwith %}
+						{% endfor %}
+						<h4 class="text-info mb-0">
+						  {% for item in societes_with_stats %}
+						  {{ item.nb_conducteurs }}
+						  {% if not forloop.last %}+{% endif %}
+						  {% endfor %}
+						</h4>
+						{% endwith %}
+						<small class="text-muted">Conducteurs total</small>
+					</div>
+					<div class="col-md-3">
+						<div class="btn-group" role="group">
+							<a href="{% url 'suivi_conducteurs:conducteur_list' %}"
+								class="btn btn-outline-primary btn-sm">
+								<i class="fas fa-users me-1"></i>Conducteurs
+							</a>
+							<a href="{% url 'suivi_conducteurs:site_list' %}" class="btn btn-outline-info btn-sm">
+								<i class="fas fa-map-marker-alt me-1"></i>Sites
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Liste des sociétés -->
+<div class="row">
+	<div class="col-12">
+		{% if societes_with_stats %}
+		<div class="row">
+			{% for item in societes_with_stats %}
+			<div class="col-md-6 col-lg-4 mb-4">
+				<div class="card societe-card h-100 {% if not item.societe.socactif %}inactive{% endif %}">
+					<div class="card-body">
+						<!-- En-tête société -->
+						<div class="societe-header">
+							<div class="d-flex justify-content-between align-items-start">
+								<div>
+									<h5 class="card-title mb-1">
+										<i class="fas fa-building me-2"></i>
+										{{ item.societe.socnom }}
+									</h5>
+									<p class="text-muted mb-0">
+										<i class="fas fa-tag me-1"></i>
+										{{ item.societe.soccode }}
+									</p>
+								</div>
+								<div>
+									{% if item.societe.socactif %}
+									<span class="badge bg-success">Active</span>
+									{% else %}
+									<span class="badge bg-secondary">Inactive</span>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+
+						<!-- Informations -->
+						<div class="mb-3">
+							<p class="mb-1">
+								<i class="fas fa-map-marker-alt text-muted me-2"></i>
+								{{ item.societe.socvillib1 }}
+							</p>
+							<p class="mb-0">
+								<i class="fas fa-mail-bulk text-muted me-2"></i>
+								{{ item.societe.soccp }}
+							</p>
+						</div>
+
+						<!-- Statistiques conducteurs -->
+						<div class="row text-center mb-3">
+							<div class="col-6">
+								<div class="conducteur-count">{{ item.nb_conducteurs }}</div>
+								<small class="text-muted">Conducteur{{ item.nb_conducteurs|pluralize }}</small>
+							</div>
+							<div class="col-6">
+								<div class="conducteur-count text-success">{{ item.nb_conducteurs_actifs }}</div>
+								<small class="text-muted">Actif{{ item.nb_conducteurs_actifs|pluralize }}</small>
+							</div>
+						</div>
+
+						<!-- Barre de progression des conducteurs actifs -->
+						{% if item.nb_conducteurs > 0 %}
+						<div class="mb-3">
+							{% widthratio item.nb_conducteurs_actifs item.nb_conducteurs 100 as pourcentage_actifs %}
+							<div class="d-flex justify-content-between align-items-center mb-1">
+								<small class="text-muted">Conducteurs actifs</small>
+								<small class="text-muted">{{ pourcentage_actifs }}%</small>
+							</div>
+							<div class="progress" style="height: 6px;">
+								<div class="progress-bar 
+                                    {% if pourcentage_actifs >= 80 %}bg-success
+                                    {% elif pourcentage_actifs >= 60 %}bg-info
+                                    {% elif pourcentage_actifs >= 40 %}bg-warning
+                                    {% else %}bg-danger{% endif %}" style="width: {{ pourcentage_actifs }}%">
+								</div>
+							</div>
+						</div>
+						{% endif %}
+
+						<!-- Actions -->
+						<div class="d-flex justify-content-between">
+							<a href="{% url 'suivi_conducteurs:conducteur_list' %}?societe={{ item.societe.socid }}"
+								class="btn btn-outline-primary btn-sm">
+								<i class="fas fa-users"></i>
+								Conducteurs ({{ item.nb_conducteurs }})
+							</a>
+
+							{% if perms.suivi_conducteurs.change_societe %}
+							<a href="/admin/suivi_conducteurs/societe/{{ item.societe.id }}/change/"
+								class="btn btn-outline-secondary btn-sm" target="_blank" title="Modifier">
+								<i class="fas fa-edit"></i>
+							</a>
+							{% endif %}
+						</div>
+
+						<!-- Date de création -->
+						<div class="mt-3 text-center">
+							<small class="text-muted">
+								<i class="fas fa-calendar me-1"></i>
+								Créée le {{ item.societe.date_creation|date:"d/m/Y" }}
+							</small>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+		{% else %}
+		<!-- État vide -->
+		<div class="col-12">
+			<div class="card">
+				<div class="card-body text-center py-5">
+					<div class="mb-3">
+						<i class="fas fa-building fa-4x text-muted"></i>
+					</div>
+					<h4 class="text-muted mb-3">Aucune société trouvée</h4>
+
+					{% if search or statut_filter %}
+					<p class="text-muted mb-4">
+						Aucune société ne correspond aux filtres sélectionnés.
+						<br>
+						<a href="{% url 'suivi_conducteurs:societe_list' %}" class="btn btn-link p-0">
+							Effacer les filtres pour voir toutes les sociétés
+						</a>
+					</p>
+					{% else %}
+					<p class="text-muted mb-4">
+						Aucune société n'a été enregistrée dans le système.
+					</p>
+					{% endif %}
+
+					<div class="d-flex justify-content-center gap-2">
+						{% if perms.suivi_conducteurs.add_societe %}
+						<a href="/admin/suivi_conducteurs/societe/add/" class="btn btn-success">
+							<i class="fas fa-plus"></i> Ajouter une société
+						</a>
+						{% endif %}
+
+						<a href="{% url 'suivi_conducteurs:dashboard' %}" class="btn btn-outline-secondary">
+							<i class="fas fa-home"></i> Retour au dashboard
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+		{% endif %}
+	</div>
+</div>
+
+<!-- Actions rapides pour mobile -->
+<div class="d-md-none fixed-bottom p-3">
+	<div class="btn-group w-100" role="group">
+		<a href="{% url 'suivi_conducteurs:dashboard' %}" class="btn btn-outline-primary">
+			<i class="fas fa-home"></i>
+		</a>
+		<a href="{% url 'suivi_conducteurs:conducteur_list' %}" class="btn btn-info">
+			<i class="fas fa-users"></i> Conducteurs
+		</a>
+		{% if perms.suivi_conducteurs.add_societe %}
+		<a href="/admin/suivi_conducteurs/societe/add/" class="btn btn-outline-success">
+			<i class="fas fa-plus"></i>
+		</a>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+	// Animation des cartes au chargement
+	document.addEventListener('DOMContentLoaded', function () {
+		const cards = document.querySelectorAll('.societe-card');
+		cards.forEach((card, index) => {
+			card.style.opacity = '0';
+			card.style.transform = 'translateY(30px)';
+
+			setTimeout(() => {
+				card.style.transition = 'all 0.6s ease';
+				card.style.opacity = '1';
+				card.style.transform = 'translateY(0)';
+			}, index * 150);
+		});
+
+		// Animation des barres de progression
+		setTimeout(() => {
+			const progressBars = document.querySelectorAll('.progress-bar');
+			progressBars.forEach((bar, index) => {
+				const width = bar.style.width;
+				bar.style.width = '0%';
+				bar.style.transition = 'width 1s ease-in-out';
+
+				setTimeout(() => {
+					bar.style.width = width;
+				}, index * 200);
+			});
+		}, 800);
+	});
+</script>
+{% endblock %}

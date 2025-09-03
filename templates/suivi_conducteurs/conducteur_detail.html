@@ -1,0 +1,425 @@
+<!-- templates/suivi_conducteurs/conducteur_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ conducteur.nom_complet }} - Détail conducteur - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<!-- <link href="{% static 'css/dashboard.css' %}" rel="stylesheet"> -->
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, #0056b3 100%);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .score-badge {
+        font-weight: 700;
+        font-size: 1.1rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 25px;
+        display: inline-block;
+        text-align: center;
+        min-width: 70px;
+    }
+    
+    .score-excellent { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+    .score-good { background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white; }
+    .score-average { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: #212529; }
+    .score-poor { background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%); color: white; }
+    .score-none { background: #6c757d; color: white; }
+    
+    .evaluation-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .evaluation-timeline:before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--bs-primary);
+    }
+    
+    .evaluation-item {
+        position: relative;
+        padding-bottom: 2rem;
+        margin-left: 1rem;
+    }
+    
+    .evaluation-item:before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--bs-primary);
+    }
+    
+    .evaluation-item:last-child {
+        padding-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block main_class %}container mt-4{% endblock %}
+
+{% block content %}
+<!-- Profil du conducteur -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="profile-header p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="me-4">
+                                <i class="fas fa-user-circle fa-4x opacity-75"></i>
+                            </div>
+                            <div>
+                                <h1 class="mb-1">{{ conducteur.nom_complet }}</h1>
+                                <p class="mb-2 opacity-75">
+                                    <i class="fas fa-building me-2"></i>
+                                    {{ conducteur.salsocid.socnom }}
+                                </p>
+                                <p class="mb-0 opacity-75">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    {{ conducteur.site.nom_commune }} ({{ conducteur.site.code_postal }})
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="mb-2">
+                            {% if conducteur.salactif %}
+                                <span class="badge bg-success fs-6">Conducteur Actif</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Conducteur Inactif</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if conducteur.interim_p %}
+                                <span class="badge bg-info me-1">Intérim</span>
+                            {% endif %}
+                            {% if conducteur.sous_traitant_p %}
+                                <span class="badge bg-warning text-dark">Sous-traitant</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informations détaillées -->
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-id-card me-2"></i>
+                            Informations personnelles
+                        </h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="fw-bold">Nom complet :</td>
+                                <td>{{ conducteur.nom_complet }}</td>
+                            </tr>
+                            {% if conducteur.date_naissance %}
+                            <tr>
+                                <td class="fw-bold">Date de naissance :</td>
+                                <td>{{ conducteur.date_naissance|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="fw-bold">Société :</td>
+                                <td>{{ conducteur.salsocid.socnom }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Site d'affectation :</td>
+                                <td>{{ conducteur.site.nom_commune }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Créé le :</td>
+                                <td>{{ conducteur.date_creation|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="text-success mb-3">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Statistiques d'évaluation
+                        </h5>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <h3 class="text-primary mb-0">{{ stats.nb_evaluations }}</h3>
+                                    <small class="text-muted">Évaluation{{ stats.nb_evaluations|pluralize }}</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light p-3 rounded mb-3">
+                                    {% if stats.moyenne_scores is not None %}
+                                        {% if stats.moyenne_scores >= 80 %}
+                                            <h3 class="text-success mb-0">{{ stats.moyenne_scores|floatformat:1 }}%</h3>
+                                        {% elif stats.moyenne_scores >= 65 %}
+                                            <h3 class="text-info mb-0">{{ stats.moyenne_scores|floatformat:1 }}%</h3>
+                                        {% elif stats.moyenne_scores >= 50 %}
+                                            <h3 class="text-warning mb-0">{{ stats.moyenne_scores|floatformat:1 }}%</h3>
+                                        {% else %}
+                                            <h3 class="text-danger mb-0">{{ stats.moyenne_scores|floatformat:1 }}%</h3>
+                                        {% endif %}
+                                    {% else %}
+                                        <h3 class="text-muted mb-0">-</h3>
+                                    {% endif %}
+                                    <small class="text-muted">Score moyen</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <h3 class="text-info mb-0">{{ stats.evaluations_par_type|length }}</h3>
+                                    <small class="text-muted">Type{{ stats.evaluations_par_type|length|pluralize }} d'éval.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dernière évaluation -->
+                        {% if stats.derniere_evaluation %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-clock me-2"></i>
+                                Dernière évaluation
+                            </h6>
+                            <p class="mb-1">
+                                <strong>{{ stats.derniere_evaluation.type_evaluation.nom }}</strong>
+                                le {{ stats.derniere_evaluation.date_evaluation|date:"d/m/Y" }}
+                            </p>
+                            <p class="mb-0 small">
+                                Évaluateur : {{ stats.derniere_evaluation.evaluateur.nom_complet }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Actions rapides -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'suivi_conducteurs:conducteur_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                                </a>
+                            </div>
+                            <div>
+                                {% if perms.suivi_conducteurs.add_evaluation %}
+                                <a href="{% url 'suivi_conducteurs:create_evaluation' %}?conducteur={{ conducteur.id }}" 
+                                   class="btn btn-success me-2">
+                                    <i class="fas fa-plus"></i> Nouvelle évaluation
+                                </a>
+                                {% endif %}
+                                {% if perms.suivi_conducteurs.change_conducteur %}
+                                <a href="/admin/suivi_conducteurs/conducteur/{{ conducteur.id }}/change/" 
+                                   class="btn btn-outline-primary" target="_blank">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historique des évaluations -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    Historique des évaluations ({{ stats.nb_evaluations }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if evaluations_with_scores %}
+                <div class="evaluation-timeline">
+                    {% for item in evaluations_with_scores %}
+                    <div class="evaluation-item">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            <div class="fw-bold text-primary">
+                                                {{ item.evaluation.date_evaluation|date:"d/m/Y" }}
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ item.evaluation.date_evaluation|date:"H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <h6 class="mb-1">{{ item.evaluation.type_evaluation.nom }}</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-user-tie me-1"></i>
+                                            {{ item.evaluation.evaluateur.nom_complet }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="col-md-2 text-center">
+                                        {% if item.score is not None %}
+                                            {% if item.score >= 80 %}
+                                                <span class="score-badge score-excellent">{{ item.score }}%</span>
+                                            {% elif item.score >= 65 %}
+                                                <span class="score-badge score-good">{{ item.score }}%</span>
+                                            {% elif item.score >= 50 %}
+                                                <span class="score-badge score-average">{{ item.score }}%</span>
+                                            {% else %}
+                                                <span class="score-badge score-poor">{{ item.score }}%</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="score-badge score-none">-</span>
+                                            <br><small class="text-muted">Incomplète</small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-3">
+                                        <small class="text-muted">
+                                            {{ item.evaluation.notes.count }} note{{ item.evaluation.notes.count|pluralize }} saisie{{ item.evaluation.notes.count|pluralize }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="col-md-2 text-end">
+                                        <a href="{% url 'suivi_conducteurs:evaluation_detail' item.evaluation.pk %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Détails
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <!-- Aucune évaluation -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-clipboard fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted mb-3">Aucune évaluation enregistrée</h5>
+                    <p class="text-muted mb-4">
+                        Ce conducteur n'a pas encore été évalué.
+                        {% if perms.suivi_conducteurs.add_evaluation %}
+                        <br>Commencez par créer sa première évaluation.
+                        {% endif %}
+                    </p>
+                    
+                    {% if perms.suivi_conducteurs.add_evaluation %}
+                    <a href="{% url 'suivi_conducteurs:create_evaluation' %}?conducteur={{ conducteur.id }}" 
+                       class="btn btn-success btn-lg">
+                        <i class="fas fa-plus"></i> Première évaluation
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Évaluations par type -->
+{% if stats.evaluations_par_type %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Répartition par type d'évaluation
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for type_nom, evaluations_type in stats.evaluations_par_type.items %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-primary h-100">
+                            <div class="card-body text-center">
+                                <h5 class="text-primary">{{ type_nom }}</h5>
+                                <h3 class="mb-3">{{ evaluations_type|length }}</h3>
+                                
+                                <!-- Scores pour ce type -->
+                                {% with scores_type=evaluations_type|slice:":3" %}
+                                    {% if scores_type %}
+                                        <div class="mb-2">
+                                            {% for item in scores_type %}
+                                                {% if item.score is not None %}
+                                                    <span class="badge 
+                                                        {% if item.score >= 80 %}bg-success
+                                                        {% elif item.score >= 65 %}bg-info
+                                                        {% elif item.score >= 50 %}bg-warning
+                                                        {% else %}bg-danger{% endif %} me-1">
+                                                        {{ item.score }}%
+                                                    </span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                                
+                                <small class="text-muted">
+                                    {% if evaluations_type|length > 3 %}
+                                        et {{ evaluations_type|length|add:"-3" }} autre{{ evaluations_type|length|add:"-3"|pluralize }}...
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animation de la timeline des évaluations
+    document.addEventListener('DOMContentLoaded', function() {
+        const evaluationItems = document.querySelectorAll('.evaluation-item');
+        
+        evaluationItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                item.style.transition = 'all 0.6s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+        
+        // Animation des cartes de statistiques
+        const statsCards = document.querySelectorAll('.bg-light');
+        statsCards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            }, index * 100 + 500);
+        });
+    });
+</script>
+{% endblock %}

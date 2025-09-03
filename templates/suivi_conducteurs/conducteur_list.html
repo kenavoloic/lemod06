@@ -1,0 +1,380 @@
+<!-- templates/suivi_conducteurs/conducteur_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des conducteurs - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<!-- <link href="{% static 'css/dashboard.css' %}" rel="stylesheet"> -->
+<style>
+    .conducteur-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid var(--bs-primary);
+    }
+    
+    .conducteur-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .score-badge {
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        min-width: 50px;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .score-excellent { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+    .score-good { background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white; }
+    .score-average { background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: #212529; }
+    .score-poor { background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%); color: white; }
+    .score-none { background: #6c757d; color: white; }
+</style>
+{% endblock %}
+
+{% block main_class %}container-fluid mt-4{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-6 text-primary">
+            <i class="fas fa-users text-primary"></i>
+            Conducteurs
+        </h1>
+        <p class="text-primary">Liste des  conducteurs</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.suivi_conducteurs.add_conducteur %}
+        <a href="/admin/suivi_conducteurs/conducteur/add/" class="btn btn-success btn-lg">
+            <i class="fas fa-plus"></i> Nouveau conducteur
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card filter-card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Recherche</label>
+                        <input type="text" name="search" id="search" class="form-control" 
+                               value="{{ search }}" placeholder="Nom, prénom ou société">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="societe" class="form-label">Société</label>
+                        <select name="societe" id="societe" class="form-select">
+                            <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actifs seulement</option>
+                            <option value="inactif" {% if statut_filter == 'inactif' %}selected{% endif %}>Inactifs seulement</option>
+                            <option value="interim" {% if statut_filter == 'interim' %}selected{% endif %}>Intérimaires</option>
+                            <option value="sous_traitant" {% if statut_filter == 'sous_traitant' %}selected{% endif %}>Sous-traitants</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-filter"></i> Filtrer
+                        </button>
+                        <a href="{% url 'suivi_conducteurs:conducteur_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Effacer
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <h4 class="text-primary mb-0">{{ total_count }}</h4>
+                        <small class="text-primary">Conducteur{{ total_count|pluralize }}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 class="text-success mb-0">
+                            {% widthratio conducteurs_with_stats|length total_count 100 %}%
+                        </h4>
+                        <small class="text-primary">Avec évaluations</small>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 class="text-info mb-0">{{ societes.count }}</h4>
+                        <small class="text-primary">Sociétés</small>
+                    </div>
+                    <div class="col-md-2">
+                        <h4 class="text-warning mb-0">{{ sites.count }}</h4>
+                        <small class="text-primary">Sites</small>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'suivi_conducteurs:evaluation_list' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-clipboard-check me-1"></i>Évaluations
+                            </a>
+                            <a href="{% url 'suivi_conducteurs:statistiques' %}" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-chart-bar me-1"></i>Statistiques
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des conducteurs -->
+<div class="row">
+    <div class="col-12">
+        {% if conducteurs_with_stats %}
+        <div class="row">
+            {% for item in conducteurs_with_stats %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card conducteur-card h-100">
+                    <div class="card-body">
+                        <!-- En-tête conducteur -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">
+                                    <i class="fas fa-user me-2"></i>
+                                    {{ item.conducteur.nom_complet }}
+                                </h5>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-building me-1"></i>
+                                    {{ item.conducteur.salsocid.socnom }}
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {{ item.conducteur.site.nom_commune }}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                {% if item.conducteur.salactif %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                                {% if item.conducteur.interim_p %}
+                                    <span class="badge bg-info">Intérim</span>
+                                {% endif %}
+                                {% if item.conducteur.sous_traitant_p %}
+                                    <span class="badge bg-warning text-dark">Sous-traitant</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Statistiques -->
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <h6 class="text-primary mb-0">{{ item.nb_evaluations }}</h6>
+                                <small class="text-muted">Évaluation{{ item.nb_evaluations|pluralize }}</small>
+                            </div>
+                            <div class="col-6">
+                                {% if item.dernier_score is not None %}
+                                    {% if item.dernier_score >= 80 %}
+                                        <span class="score-badge score-excellent">{{ item.dernier_score }}%</span>
+                                    {% elif item.dernier_score >= 65 %}
+                                        <span class="score-badge score-good">{{ item.dernier_score }}%</span>
+                                    {% elif item.dernier_score >= 50 %}
+                                        <span class="score-badge score-average">{{ item.dernier_score }}%</span>
+                                    {% else %}
+                                        <span class="score-badge score-poor">{{ item.dernier_score }}%</span>
+                                    {% endif %}
+                                    <small class="d-block text-muted">Dernier score</small>
+                                {% else %}
+                                    <span class="score-badge score-none">-</span>
+                                    <small class="d-block text-muted">Pas d'évaluation</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Dernière évaluation -->
+                        {% if item.derniere_evaluation %}
+                        <div class="mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                Dernière évaluation : {{ item.derniere_evaluation.date_evaluation|date:"d/m/Y" }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-clipboard me-1"></i>
+                                {{ item.derniere_evaluation.type_evaluation.nom }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'suivi_conducteurs:conducteur_detail' item.conducteur.pk %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Détails
+                            </a>
+                            
+                            {% if perms.suivi_conducteurs.add_evaluation %}
+                            <a href="{% url 'suivi_conducteurs:create_evaluation' %}?conducteur={{ item.conducteur.id }}" 
+                               class="btn btn-success btn-sm" title="Évaluer ce conducteur">
+                                <i class="fas fa-plus"></i> Évaluer
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination si nécessaire -->
+        {% comment %}
+        {% if is_paginated %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Navigation des pages">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">&laquo; Première</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Précédente</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Suivante</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Dernière &raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
+        {% endcomment %}
+        
+        {% else %}
+        <!-- État vide -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-users fa-4x text-muted"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">Aucun conducteur trouvé</h4>
+                    
+                    {% if search or societe_filter or site_filter or statut_filter %}
+                        <p class="text-muted mb-4">
+                            Aucun conducteur ne correspond aux filtres sélectionnés.
+                            <br>
+                            <a href="{% url 'suivi_conducteurs:conducteur_list' %}" class="btn btn-link p-0">
+                                Effacer les filtres pour voir tous les conducteurs
+                            </a>
+                        </p>
+                    {% else %}
+                        <p class="text-muted mb-4">
+                            Aucun conducteur n'a été enregistré dans le système.
+                        </p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        {% if perms.suivi_conducteurs.add_conducteur %}
+                        <a href="/admin/suivi_conducteurs/conducteur/add/" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Ajouter un conducteur
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'suivi_conducteurs:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> Retour au dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions flottantes pour mobile -->
+<div class="d-md-none fixed-bottom p-3">
+    <div class="btn-group w-100" role="group">
+        <a href="{% url 'suivi_conducteurs:dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-home"></i>
+        </a>
+        {% if perms.suivi_conducteurs.add_evaluation %}
+        <a href="{% url 'suivi_conducteurs:create_evaluation' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Évaluer
+        </a>
+        {% endif %}
+        {% if perms.suivi_conducteurs.add_conducteur %}
+        <a href="/admin/suivi_conducteurs/conducteur/add/" class="btn btn-outline-success">
+            <i class="fas fa-user-plus"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animation des cartes au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.conducteur-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+    
+    // Pré-remplir le formulaire d'évaluation avec le conducteur sélectionné
+    function evaluerConducteur(conducteurId, conducteurNom) {
+        const url = "{% url 'suivi_conducteurs:create_evaluation' %}?conducteur=" + conducteurId;
+        window.location.href = url;
+    }
+</script>
+{% endblock %}">Toutes les sociétés</option>
+                            {% for societe in societes %}
+                            <option value="{{ societe.socid }}" {% if societe_filter == societe.socid|stringformat:"s" %}selected{% endif %}>
+                                {{ societe.socnom }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="site" class="form-label">Site</label>
+                        <select name="site" id="site" class="form-select">
+                            <option value="">Tous les sites</option>
+                            {% for site in sites %}
+                            <option value="{{ site.id }}" {% if site_filter == site.id|stringformat:"s" %}selected{% endif %}>
+                                {{ site.nom_commune }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="statut" class="form-label">Statut</label>
+                        <select name="statut" id="statut" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            <option value="
