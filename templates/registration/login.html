@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
+{% load custom_filters %}
 {% block title %}Connexion - Suivi des Conducteurs{% endblock %}
 
 {% block body_class %}login-page{% endblock %}
@@ -95,9 +95,9 @@
 					</div>
 				</div>
 
-				<div class="text-center mt-3">
-					<p class="text-white small opacity-75">
-						 {% now "l j F Y" %}
+				<div class="text-center mt-3 mx-auto">
+					<p class="text-white small">
+						 {% now "j F Y" %}
 
 					</p>
 				</div>

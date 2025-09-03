@@ -49,7 +49,7 @@
 			<i class="fas fa-building text-primary"></i>
 			Sociétés
 		</h1>
-		<p class="text-muted">Répartition des conducteurs par sociétés</p>
+		<p class="text-primary">Répartition des conducteurs par société</p>
 	</div>
 	<div class="col-md-4 text-end">
 		{% if perms.suivi_conducteurs.add_societe %}
@@ -105,7 +105,9 @@
 				<div class="row text-center">
 					<div class="col-md-3">
 						<h4 class="text-primary mb-0">{{ total_count }}</h4>
-						<small class="text-muted">Société{{ total_count|pluralize }}</small>
+						<!-- <small class="text-muted"> -->
+						  Société{{ total_count|pluralize }}
+						<!-- </small> -->
 					</div>
 					<div class="col-md-3">
 						<h4 class="text-success mb-0">
@@ -113,7 +115,9 @@
 							{{ actives }}
 							{% endwith %}
 						</h4>
-						<small class="text-muted">Actives</small>
+						<!-- <small class="text-muted"> -->
+						  Actives
+						<!-- </small> -->
 					</div>
 					<div class="col-md-3">
 						{% with total_conducteurs=0 %}
@@ -128,7 +132,9 @@
 						  {% endfor %}
 						</h4>
 						{% endwith %}
-						<small class="text-muted">Conducteurs total</small>
+						<!-- <small class="text-muted"> -->
+						  Conducteurs total
+						<!-- </small> -->
 					</div>
 					<div class="col-md-3">
 						<div class="btn-group" role="group">
@@ -195,11 +201,15 @@
 						<div class="row text-center mb-3">
 							<div class="col-6">
 								<div class="conducteur-count">{{ item.nb_conducteurs }}</div>
-								<small class="text-muted">Conducteur{{ item.nb_conducteurs|pluralize }}</small>
+								<!-- <small class="text-muted"> -->
+								  Conducteur{{ item.nb_conducteurs|pluralize }}
+								<!-- </small> -->
 							</div>
 							<div class="col-6">
 								<div class="conducteur-count text-success">{{ item.nb_conducteurs_actifs }}</div>
-								<small class="text-muted">Actif{{ item.nb_conducteurs_actifs|pluralize }}</small>
+								<!-- <small class="text-muted"> -->
+								  Actif{{ item.nb_conducteurs_actifs|pluralize }}
+								<!-- </small> -->
 							</div>
 						</div>
 

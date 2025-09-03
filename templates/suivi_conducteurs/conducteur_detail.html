@@ -256,11 +256,26 @@
                                 <div class="row align-items-center">
                                     <div class="col-md-2">
                                         <div class="text-center">
-                                            <div class="fw-bold text-primary">
-                                                {{ item.evaluation.date_evaluation|date:"d/m/Y" }}
+											<div class="fw-bold text-primary">
+												<!-- {{ item.evaluation.date_evaluation|date:"d/m/Y" }} -->
+												{% if conducteur.date_evaluation %}
+												{% if conducteur.date_evaluation.hour is defined %}
+												{{ conducteur.date_evaluation|date:"d/m/Y H:i" }}
+												{% else %}
+												{{ conducteur.date_evaluation|date:"d/m/Y" }}
+												{% endif %}
+												{% endif %}
                                             </div>
-                                            <small class="text-muted">
-                                                {{ item.evaluation.date_evaluation|date:"H:i" }}
+											<small class="text-muted">
+												
+												{% if conducteur.date_evaluation %}
+												{% if conducteur.date_evaluation.hour is defined %}
+												{{ conducteur.date_evaluation|date:"d/m/Y H:i" }}
+												{% else %}
+												{{ conducteur.date_evaluation|date:"d/m/Y" }}
+												{% endif %}
+											  {% endif %}
+											  
                                             </small>
                                         </div>
                                     </div>

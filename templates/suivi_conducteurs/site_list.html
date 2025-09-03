@@ -50,7 +50,7 @@
             <i class="fas fa-map-marker-alt text-primary"></i>
             Sites
         </h1>
-		<p class="text-muted">Gérez les sociétés et leurs</p>
+		<p class="text-primary">Répartition des conducteurs par site</p>
     </div>
     <div class="col-md-4 text-end">
         {% if perms.suivi_conducteurs.add_site %}
@@ -105,7 +105,9 @@
                 <div class="row text-center">
                     <div class="col-md-3">
                         <h4 class="text-primary mb-0">{{ total_count }}</h4>
-                        <small class="text-muted">Site{{ total_count|pluralize }}</small>
+						<!-- <small class="text-muted"> -->
+			  Site{{ total_count|pluralize }}
+			<!-- </small> -->
                     </div>
                     <div class="col-md-3">
                         <h4 class="text-success mb-0">
@@ -116,20 +118,24 @@
                                 {% for item in sites_with_stats %}{{ item.nb_conducteurs }}{% if not forloop.last %}+{% endif %}{% endfor %}
                             {% endwith %}
                         </h4>
-                        <small class="text-muted">Conducteurs total</small>
+						<!-- <small class="text-muted"> -->
+			  Conducteurs total
+			<!-- </small> -->
                     </div>
-                    <div class="col-md-3">
-                        <h4 class="text-info mb-0">
-                            {% with total_societes=0 %}
-                                {% for item in sites_with_stats %}
-                                    {% with total_societes=total_societes|add:item.nb_societes %}{% endwith %}
-                                {% endfor %}
-                                {% for item in sites_with_stats %}{{ item.nb_societes }}{% if not forloop.last %}+{% endif %}{% endfor %}
-                            {% endwith %}
-                        </h4>
-                        <small class="text-muted">Sociétés actives</small>
-                    </div>
-                    <div class="col-md-3">
+		    <div class="col-md-3">
+						<h4 class="text-info mb-0">
+							{% with total_societes=0 %}
+							{% for item in sites_with_stats %}
+							{% with total_societes=total_societes|add:item.nb_societes %}{% endwith %}
+							{% endfor %}
+							{% for item in sites_with_stats %}{{ item.nb_societes }}{% if not forloop.last %}+{% endif %}{% endfor %}
+							{% endwith %}
+						</h4>
+						<small class="text-muted">
+							Sociétés actives
+						</small>
+					</div>
+					<div class="col-md-3">
                         <div class="btn-group" role="group">
                             <a href="{% url 'suivi_conducteurs:conducteur_list' %}" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-users me-1"></i>Conducteurs
@@ -189,8 +195,12 @@
                         {% if item.nb_conducteurs > 0 %}
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted">Conducteurs actifs</small>
-                                <small class="text-muted">{{ item.nb_conducteurs_actifs }}/{{ item.nb_conducteurs }}</small>
+                              <small class="text-white">
+				Conducteurs actifs
+			      </small>
+                              <small class="text-white">
+				{{ item.nb_conducteurs_actifs }}/{{ item.nb_conducteurs }}
+			      </small>
                             </div>
                             {% widthratio item.nb_conducteurs_actifs item.nb_conducteurs 100 as pourcentage_actifs %}
                             <div class="progress" style="height: 6px;">
