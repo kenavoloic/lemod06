@@ -5,7 +5,7 @@
 {% block title %}Dashboard - {{ block.super }}{% endblock %}
 
 {% block extra_css %}
-<link href="{% static 'css/dashboard.css' %}" rel="stylesheet">
+<!-- <link href="{% static 'css/dashboard.css' %}" rel="stylesheet"> -->
 {% endblock %}
 
 {% block main_class %}container-fluid mt-4{% endblock %}
@@ -32,7 +32,7 @@
 			<div class="card-body">
 				<i class="fas fa-users fa-3x text-primary mb-3 stats-icon"></i>
 				<h3 class="text-primary stats-number">{{ total_conducteurs }}</h3>
-				<p class="text-muted stats-label">Conducteurs actifs</p>
+				<p class="text-primary stats-label">Conducteurs actifs</p>
 			</div>
 		</div>
 	</div>
@@ -42,7 +42,7 @@
 			<div class="card-body">
 				<i class="fas fa-clipboard-check fa-3x text-success mb-3 stats-icon"></i>
 				<h3 class="text-success stats-number">{{ total_evaluations }}</h3>
-				<p class="text-muted stats-label">Évaluations totales</p>
+				<p class="text-primary stats-label">Évaluations totales</p>
 			</div>
 		</div>
 	</div>
@@ -52,7 +52,7 @@
 			<div class="card-body">
 				<i class="fas fa-clipboard-check fa-3x text-info mb-3 stats-icon"></i>
 				<h3 class="text-info stats-number">{{ evaluations_ce_mois }}</h3>
-				<p class="text-muted stats-label">Évaluations ce mois-ci</p>
+				<p class="text-primary stats-label">Évaluations ce mois-ci</p>
 			</div>
 		</div>
 	</div>
@@ -66,7 +66,7 @@
 						Nouvelle
 					</a>
 				</h3>
-				<p class="text-muted stats-label">Évaluation</p>
+				<p class="text-primary stats-label">Évaluation</p>
 			</div>
 		</div>
 	</div>
@@ -134,7 +134,7 @@
 								<td>{{ evaluation.date_evaluation|date:"d/m/Y" }}</td>
 								<td>
 									<strong>{{ evaluation.conducteur.nom_complet }}</strong>
-									<br><small class="text-muted">{{ evaluation.conducteur.site.nom_commune }}</small>
+									<br>{{ evaluation.conducteur.site.nom_commune }}
 								</td>
 								<td>
 									<span class="badge 
@@ -160,7 +160,7 @@
 									{% endwith %}
 								</td>
 								<td>
-									<small class="text-muted">{{ evaluation.evaluateur.nom_complet }}</small>
+									{{ evaluation.evaluateur.nom_complet }}
 								</td>
 								<td>
 									<a href="{% url 'suivi_conducteurs:evaluation_detail' evaluation.pk %}"

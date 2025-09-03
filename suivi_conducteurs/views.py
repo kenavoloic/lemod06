@@ -60,12 +60,17 @@ def create_evaluation(request):
     evaluateurs = Evaluateur.objects.filter(
         user__groups__name__in=['RH', 'Exploitation']
     ).select_related('service', 'user').prefetch_related('user__groups__groupe_etendu').distinct()
-    
+
+    evaluateur_connecte = None
+    if hasattr(request.user, 'evaluateur'):
+        evaluateur_connecte = request.user.evaluateur
+        
 
     context = {
         'conducteurs': conducteurs,
         'evaluateurs': evaluateurs,
         'types_evaluation': types_evaluation,
+        'evaluateur_connecte': evaluateur_connecte,
         'services_autorises': ['Ressources Humaines', 'Exploitation'],
     }
     return render(request, 'suivi_conducteurs/create_evaluation.html', context)

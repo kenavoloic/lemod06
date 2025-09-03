@@ -96,7 +96,7 @@
    STYLES DE BASE
    ============================================ */
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html {
@@ -1087,4 +1087,39 @@ main {
     linear-gradient(to right, rgba(255, 0, 0, 0.1) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 0, 0, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+/* Fix pour la visibilité des éléments small et text-muted */
+small, 
+.small {
+    color: var(--bs-body-color, #212529) !important;
+    opacity: 0.8;
+}
+
+.text-muted {
+    color: var(--bs-secondary-color, #6c757d) !important;
+    opacity: 0.75;
+}
+
+/* Mode sombre spécifique */
+[data-bs-theme="dark"] small,
+[data-bs-theme="dark"] .small {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+[data-bs-theme="dark"] .text-muted {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Mode clair spécifique */
+[data-bs-theme="light"] small,
+[data-bs-theme="light"] .small,
+html:not([data-bs-theme]) small,
+html:not([data-bs-theme]) .small {
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-bs-theme="light"] .text-muted,
+html:not([data-bs-theme]) .text-muted {
+  color: #6c757d !important;
 }
