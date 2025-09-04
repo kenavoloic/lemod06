@@ -6,7 +6,7 @@
 	<div class="card-header bg-gradient-primary text-white">
 		<div class="d-flex justify-content-between align-items-center">
 			<div>
-				<h5 class="card-title mb-1">
+				<h5 class="card-title mb-1 text-primary">
 					<i class="fas fa-star me-2"></i>
 					Critères d'évaluation - {{ type_evaluation.nom }}
 				</h5>
@@ -145,28 +145,27 @@
 								<div>
 									<strong>Conseils pour bien évaluer :</strong>
 									<ul class="mb-0 mt-1 small">
-										<li>Utilisez toute l'échelle de notation ({{ criteres.0.valeur_mini }} à {{
-											criteres.0.valeur_maxi }})</li>
+										<li>Utilisez toute l'échelle de notation ({{ criteres.0.valeur_mini }} à {{ criteres.0.valeur_maxi }})</li>
 										<li>Les champs deviennent verts quand ils sont correctement remplis</li>
-										<li>Votre progression est sauvegardée automatiquement</li>
+										<!-- <li>Votre progression est sauvegardée automatiquement</li> -->
 									</ul>
 								</div>
 							</div>
 						</div>
-						<div class="col-md-4 text-md-end">
-							<div class="btn-group btn-group-sm">
-								<button type="button" class="btn btn-outline-primary" data-action="save-draft"
-									title="Sauvegarder le brouillon">
-									<i class="fas fa-save me-1"></i>
-									Sauvegarder
-								</button>
-								<button type="button" class="btn btn-outline-secondary" data-action="reset-form"
-									title="Réinitialiser le formulaire">
-									<i class="fas fa-undo me-1"></i>
-									Reset
-								</button>
-							</div>
-						</div>
+						<!-- <div class="col-md-4 text-md-end">
+													<div class="btn-group btn-group-sm">
+														<button type="button" class="btn btn-outline-primary" data-action="save-draft"
+															title="Sauvegarder le brouillon">
+															<i class="fas fa-save me-1"></i>
+															Sauvegarder
+														</button>
+														<button type="button" class="btn btn-outline-secondary" data-action="reset-form"
+															title="Réinitialiser le formulaire">
+															<i class="fas fa-undo me-1"></i>
+															Reset
+														</button>
+													</div>
+												</div> -->
 					</div>
 				</div>
 			</div>

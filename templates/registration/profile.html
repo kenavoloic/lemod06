@@ -96,16 +96,20 @@
 									<div class="col-4">
 										<div class="bg-light p-3 rounded">
 											<h4 class="text-info">{{ stats.permissions_count }}</h4>
-											<small class="text-muted">Permission{{ stats.permissions_count|pluralize
-												}}</small>
+											<small class="text-muted">Permission{{ stats.permissions_count|pluralize }}</small>
 										</div>
 									</div>
 									<div class="col-4">
 										<div class="bg-light p-3 rounded">
 											<h4
 												class="{% if stats.is_superuser %}text-danger{% else %}text-success{% endif %}">
-												{% if stats.is_superuser %}Admin{% elif stats.is_staff %}Staff{% else
-												%}User{% endif %}
+											  {% if stats.is_superuser %}
+											  Admin
+											  {% elif stats.is_staff %}
+											  Staff
+											  {% else %}
+											  User
+											  {% endif %}
 											</h4>
 											<small class="text-muted">Statut</small>
 										</div>

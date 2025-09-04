@@ -25,7 +25,7 @@
 
 		<div class="card">
 			<div class="card-header">
-				<h5 class="card-title mb-0">Informations de l'évaluation</h5>
+				<h5 class="card-title mb-0 text-primary">Informations de l'évaluation</h5>
 			</div>
 			<div class="card-body">
 				<form id="evaluation-form" method="post" action="{% url 'suivi_conducteurs:submit_evaluation' %}">
@@ -34,7 +34,7 @@
 					<div class="row">
 						<div class="col-md-6">
 							<div class="mb-3">
-								<label for="conducteur" class="form-label">Conducteur à évaluer</label>
+								<label for="conducteur" class="form-label text-primary">Conducteur à évaluer</label>
 								<select name="conducteur" id="conducteur" class="form-select" required>
 									<option value="">Sélectionner un conducteur</option>
 									{% for conducteur in conducteurs %}
@@ -48,9 +48,9 @@
 
 						<div class="col-md-6">
 							<div class="mb-3">
-								<label for="evaluateur" class="form-label">
+								<label for="evaluateur" class="form-label text-primary">
 									Évaluateur
-									<small class="text-muted">(RH ou Exploitation uniquement)</small>
+									<small class="text-primary">(RH ou Exploitation uniquement)</small>
 								</label>
 								<select name="evaluateur" id="evaluateur" class="form-select" required>
 									<option value="">Sélectionner un évaluateur</option>
@@ -91,7 +91,7 @@
 					<div class="row">
 						<div class="col-md-6">
 							<div class="mb-3">
-								<label for="type_evaluation" class="form-label">Type d'évaluation</label>
+								<label for="type_evaluation" class="form-label text-primary">Type d'évaluation</label>
 								<select name="type_evaluation" id="type_evaluation" class="form-select" required
 									hx-get="{% url 'suivi_conducteurs:load_criteres_htmx' %}"
 									hx-target="#criteres-container" hx-trigger="change" hx-include="this">
@@ -105,7 +105,7 @@
 
 						<div class="col-md-6">
 							<div class="mb-3">
-								<label for="date_evaluation" class="form-label">Date d'évaluation</label>
+								<label for="date_evaluation" class="form-label text-primary">Date d'évaluation</label>
 								<input type="date" name="date_evaluation" id="date_evaluation" class="form-control"
 									required>
 							</div>
