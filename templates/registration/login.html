@@ -135,8 +135,9 @@
 				</div>
 
 				<div class="text-center mt-3 mx-auto">
-					<p class="text-primary small">
-						{% now "j F Y" %}
+					<p class="text-white">
+					  {% now "l j F Y" as date_du_jour %}
+					  {{ date_du_jour|capfirst }}
 					</p>
 				</div>
 			</div>

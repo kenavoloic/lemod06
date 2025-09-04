@@ -1,14 +1,9 @@
-# configurations/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
-
-# Import des vues d'authentification et d'erreur
 from gestion_groupes import auth_views
-#from suivi_conducteurs import views as suivi_views  # Import des vues de test
-# Vue d'accueil simple
 
 def home_redirect(request):
     """Redirection intelligente selon l'état de connexion"""
@@ -76,7 +71,7 @@ urlpatterns = [
     # Dashboard protégé
     path('dashboard/', include('suivi_conducteurs.urls')),
     path('groupes/', include('gestion_groupes.urls')),    
-    # API pour les stats
+
     path('api/dashboard-stats/', auth_views.dashboard_stats, name='dashboard_stats'),
 ]
 

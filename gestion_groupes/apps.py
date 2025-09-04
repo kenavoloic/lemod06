@@ -1,4 +1,3 @@
-# gestion_groupes/apps.py
 from django.apps import AppConfig
 
 

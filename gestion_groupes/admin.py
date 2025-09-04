@@ -233,7 +233,8 @@ class CustomGroupAdmin(GroupAdmin):
     couleur_display.short_description = 'Couleur'
 
 
-# Désinscrire les anciens admins et réinscrire les nouveaux
+# Désinscrire les anciens admins et réinscrire les nouveaux rendant ainsi possible la
+# modification du panneau d'administration de Django
 admin.site.unregister(User)
 admin.site.unregister(Group)
 

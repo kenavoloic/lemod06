@@ -1,4 +1,3 @@
-# gestion_groupes/auth_views.py
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -37,8 +36,9 @@ def user_login(request):
                             poste='Non défini',
                             actif=user.is_active,
                         )
-                    
-                    messages.success(request, f'Bienvenue {user.get_full_name() or user.username} !')
+                    #comme pour le logout : pas très informatif tant qu'esthétiquement
+                    # il n'est pas amélioré
+                    #messages.success(request, f'Bienvenue {user.get_full_name() or user.username} !')
                     
                     # Redirection après connexion réussie
                     next_page = request.GET.get('next')
@@ -71,7 +71,8 @@ def user_logout(request):
     if request.user.is_authenticated:
         user_name = request.user.get_full_name() or request.user.username
         logout(request)
-        messages.info(request, f"Au revoir {user_name} ! Vous avez été déconnecté.")
+        # pas très informatif
+        #messages.info(request, f"Au revoir {user_name} ! Vous avez été déconnecté.")
     return redirect('login')
 
 
@@ -120,7 +121,8 @@ def change_password(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)  # Maintenir la session
-            messages.success(request, "Mot de passe modifié avec succès !")
+            #Pas très informatif, voir login et logout
+            #messages.success(request, "Mot de passe modifié avec succès !")
             return redirect('user_profile')
         else:
             messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
